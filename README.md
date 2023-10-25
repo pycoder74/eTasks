@@ -1,0 +1,1 @@
+# etasks_pyqt6

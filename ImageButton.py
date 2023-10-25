@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import QPushButton
 from PyQt6.QtGui import QIcon, QPixmap
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QTimer
 from PyQt6.QtCore import QSize
 
 class ImageButton(QPushButton):

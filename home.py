@@ -11,20 +11,32 @@ from splashscreen import AnimatedSplashScreen
 import time
 
 class Home(QMainWindow):
-    def __init__(self, fname='', parent=None):
-        self.splash = AnimatedSplashScreen()
+    def __init__(self, fname='', app = None, parent=None):
         super().__init__(parent)
+        self.app = app
+
+        # Initialize and show the splash screen as an attribute of the Home class
+        self.splash = AnimatedSplashScreen()
+        self.splash.resize(400, 400)
+        self.splash.show()
+        self.showMaximized()
+
+        # Initial setups
         self.stretch_added = False
         self.child_wins = []
         self.fname = fname
-        self.showMaximized()
         self.setWindowTitle("Home")
-        self.widgets = []  # Initialize the widgets list
-        self.no_task_label = QLabel('No Tasks Found', self)  # Initialize the label
-        self.no_task_label.setAlignment(Qt.AlignmentFlag.AlignCenter)  # Align label's text to center
-        self.no_task_label.hide()  # Initially hide it
+        self.widgets = []  
+        self.no_task_label = QLabel('No Tasks Found', self)
+        self.no_task_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.no_task_label.hide()  
+        
+        # Setup UI and load tasks
         self.setup_ui()
-        app.processEvents()
+
+        # Once all setups are done, close the splash screen and show the main window
+        self.splash.closeSplash()
+
 
     def setup_ui(self):
         self.widget = QWidget()
@@ -33,7 +45,7 @@ class Home(QMainWindow):
 
         # Quickbar setup
         self.qb = QuickBar(self)
-        app.processEvents()
+        self.app.processEvents()
         self.layout.addWidget(self.qb)
 
         conn = sqlite3.connect('users.db')
@@ -70,20 +82,27 @@ class Home(QMainWindow):
 
         # Add the no task label to layout
         self.layout.addWidget(self.no_task_label)
-        app.processEvents()
+        self.app.processEvents()
 
-        # Load tasks from the database
-        self.splash.show()
         self.splash.finished.connect(self.on_splash_finished)  # Connect the signal to a slot
+        print('Loading tasks...')
         self.load_tasks()
-        app.processEvents()
-
-
+        print('tasks loaded')
+        self.app.processEvents()
+    
+    def on_splash_finished(self):
+        # Close the splash screen
+        self.splash.closeSplash()
+        
         # Set the main layout
         self.widget.setLayout(self.layout)
         self.setCentralWidget(self.widget)
         self.layout.addStretch(1)
+
+        # Show the main window
         self.show()
+
+
     def setup_add_button(self):
         self.addbtn = QToolButton()
         self.addbtn.setText('+')
@@ -194,7 +213,7 @@ QMenu::item:selected {
                 loaded_task = Task(taskname, sD, eD)
                 self.widgets.append(loaded_task)
                 self.layout.addWidget(loaded_task)
-                app.processEvents()  # Process any pending events.
+                self.app.processEvents()  # Process any pending events.
                 
             if not self.stretch_added:
                 self.layout.addStretch(1)
@@ -210,5 +229,6 @@ QMenu::item:selected {
 
 if __name__ == '__main__':
     app = QApplication([])
-    main_win = Home('Elliott')
+    window = QMainWindow()
+    main_win = Home('Elliott', app, window)
     app.exec()

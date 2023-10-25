@@ -40,9 +40,7 @@ class AnimatedSplashScreen(QSplashScreen):
             painter.drawEllipse(QPoint(int(x), int(y)), 8, 8)
     def closeSplash(self):
         self.timer.stop()
-        self.finished.emit()  # Emit the finished signal instead of closing directly
         self.close()
-    
 if __name__ == "__main__":
 
     app = QApplication([])
@@ -52,11 +50,14 @@ if __name__ == "__main__":
     splash.show()
     app.processEvents()
 
-    window = QMainWindow()
-    window.show()
+    win = QMainWindow()
+    
+    def close_splash_screen():
+        splash.closeSplash()
+        win.show()
+
+    # Use QTimer to call the function after 5 seconds
+    QTimer.singleShot(5000, close_splash_screen)
 
     sys.exit(app.exec())
-
-
-
 

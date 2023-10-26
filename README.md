@@ -1,1 +1,1 @@
-# etasks_pyqt6
+# etasks v2

@@ -7,19 +7,13 @@ from addgroupwin import AddGroupWindow
 from task_obj import Task
 import sqlite3
 from group_obj import Group
-from splashscreen import AnimatedSplashScreen
+from splashscreen import SplashScreen
 import time
 
 class Home(QMainWindow):
     def __init__(self, fname='', app = None, parent=None):
         super().__init__(parent)
         self.app = app
-
-        # Initialize and show the splash screen as an attribute of the Home class
-        self.splash = AnimatedSplashScreen()
-        self.splash.resize(400, 400)
-        self.splash.show()
-        self.showMaximized()
 
         # Initial setups
         self.stretch_added = False
@@ -32,20 +26,27 @@ class Home(QMainWindow):
         self.no_task_label.hide()  
         
         # Setup UI and load tasks
+        self.splashscreen = SplashScreen()
+        self.splashscreen.resize(400, 400)
+        screen_size = self.app.primaryScreen().size()
+        x = (screen_size.width() - self.splashscreen.width()) // 2
+        y = (screen_size.height() - self.splashscreen.height()) // 2
+
+        self.splashscreen.move(x, y)
+        self.splashscreen.show()
+        self.app.processEvents()
         self.setup_ui()
 
-        # Once all setups are done, close the splash screen and show the main window
-        self.splash.closeSplash()
 
 
     def setup_ui(self):
+        self.showMaximized()
         self.widget = QWidget()
         self.layout = QVBoxLayout()
 
 
         # Quickbar setup
         self.qb = QuickBar(self)
-        self.app.processEvents()
         self.layout.addWidget(self.qb)
 
         conn = sqlite3.connect('users.db')
@@ -84,22 +85,18 @@ class Home(QMainWindow):
         self.layout.addWidget(self.no_task_label)
         self.app.processEvents()
 
-        self.splash.finished.connect(self.on_splash_finished)  # Connect the signal to a slot
         print('Loading tasks...')
         self.load_tasks()
         print('tasks loaded')
-        self.app.processEvents()
     
-    def on_splash_finished(self):
-        # Close the splash screen
-        self.splash.closeSplash()
         
         # Set the main layout
         self.widget.setLayout(self.layout)
         self.setCentralWidget(self.widget)
         self.layout.addStretch(1)
 
-        # Show the main window
+        # Show the main window anc close splash
+        self.splashscreen.closeSplash()
         self.show()
 
 

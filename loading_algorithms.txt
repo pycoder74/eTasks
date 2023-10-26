@@ -1,0 +1,24 @@
+Page 1
+Things to load:
+-Quick bar:
+ • Temperature
+-Tasks:
+ • Details
+ • Put into appropriate group
+-Groups:
+ • Tasks
+ • Load groups before tasks
+ • Check if there are any to load before attempting to load any.
+ • Search through tas­ks for groups.
+ • Create group-Obj with the group info
+ • Load tasks into group
+
+Page 2
+Algorithm:
+1. Start splash screen
+2- Load quickbar
+3. wait for quick bar to load
+4. Load groups
+5. Load tasks into appropriate group
+6. Load non-organized tasks
+7. Stop splash

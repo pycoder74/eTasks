@@ -64,8 +64,7 @@ class AddGroupWindow(QMainWindow):  # Inherit from QMainWindow
             cursor = conn.cursor()
             # Update the task_group column for each selected task
             for task in tasks:
-                cursor.execute("UPDATE tasks SET task_group = ? WHERE taskname = ? AND user = ?", (group_name, task, self.user_id))
-
+                cursor.execute("UPDATE tasks SET task_group = ? WHERE taskname = ? AND user = ?", (group_name, task, self.user_id))       
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

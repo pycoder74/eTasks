@@ -88,6 +88,7 @@ class Home(QMainWindow):
         print('Loading tasks...')
         self.load_tasks()
         print('tasks loaded')
+        QTimer.singleShot(500, self.splashscreen.closeSplash)
     
         
         # Set the main layout
@@ -96,8 +97,8 @@ class Home(QMainWindow):
         self.layout.addStretch(1)
 
         # Show the main window anc close splash
-        self.splashscreen.closeSplash()
         self.show()
+        
 
 
     def setup_add_button(self):

@@ -15,15 +15,17 @@ def load_tasks(user_id, parent=None):
         parent.layout.addWidget(notasklbl)
     else:
         cursor.execute('SELECT * FROM tasks WHERE user = ?', [user_id])
-        row = cursor.fetchall()
-        print('Row:',row)
+        rows = cursor.fetchall()
+        print('Rows:', rows)
         
-        for row in cursor.fetchall():
-            taskname, priority, topic, task_group, sD, eD, sT, eT  # Added an underscore to account for the 'id' column
+        for row in rows:
+            _, taskname, priority, topic, task_group, sD, eD, sT, eT = row
             
-            # Assuming `nTask` is a PyQt6 widget, you can simply add it to the layout.
+            # Assuming `Task` is a PyQt6 widget and it takes taskname, sD, eD as its arguments.
             loaded_task = Task(taskname, sD, eD)
             parent.layout.addWidget(loaded_task)
+
+    conn.close()
 
 if __name__ == '__main__':
     app = QApplication([])
@@ -35,6 +37,9 @@ if __name__ == '__main__':
     layout = QVBoxLayout()
     central_widget.setLayout(layout)
     
+    # Adding a layout attribute to the window for easier access in the load_tasks function
+    window.layout = layout
+
     load_tasks('1', window)
     
     window.show()

@@ -203,7 +203,7 @@ QMenu::item:selected {
         # ... [Other parts of the Home class]
 
     def load_tasks(self):
-        self.task_loading_thread = TaskLoaderThread()
+        self.task_loading_thread = TaskLoaderThread(self.user_id)
         self.task_loading_thread.tasksLoaded.connect(self.display_loaded_tasks)
         self.task_loading_thread.start()
 

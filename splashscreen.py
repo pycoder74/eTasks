@@ -31,7 +31,7 @@ class SplashScreen(QSplashScreen):
         painter.drawArc(rect, self.start_ang * 16, self.span_ang * 16)
 
     def updateArc(self):
-        self.span_ang += 5  # Increment span angle
+        self.span_ang += 8  # Increment span angle
         if self.span_ang >= 360:  # Full circle reached
             self.span_ang = 5 # Stop the timer once the arc completes the circle
         self.repaint()  # Force a repaint to see the updated arc

@@ -9,6 +9,7 @@ import sqlite3
 from group_obj import Group
 from splashscreen import SplashScreen
 import time
+from loadT import TaskLoaderThread, load_tasks
 
 class Home(QMainWindow):
     def __init__(self, fname='', app = None, parent=None):
@@ -199,30 +200,29 @@ QMenu::item:selected {
         self.win.show()
 
 
+        # ... [Other parts of the Home class]
+
     def load_tasks(self):
-        try:
-            conn = sqlite3.connect('users.db')
-            cursor = conn.cursor()
-            
-            cursor.execute('SELECT * FROM tasks')
-            
-            for row in cursor.fetchall():
-                taskname, user, priority, topic, task_group, sD, eD, sT, eT = row
+        self.task_loading_thread = TaskLoaderThread()
+        self.task_loading_thread.tasksLoaded.connect(self.display_loaded_tasks)
+        self.task_loading_thread.start()
+
+    def display_loaded_tasks(self, rows):
+        if not rows:
+            notasklbl = QLabel("No tasks have been created. Create a new one by clicking the add button", alignment=Qt.AlignmentFlag.AlignCenter)
+            self.layout.addWidget(notasklbl)
+        else:
+            for row in rows:
+                _, taskname, _, _, _, sD, eD, _, _ = row
                 loaded_task = Task(taskname, sD, eD)
                 self.widgets.append(loaded_task)
                 self.layout.addWidget(loaded_task)
-                self.app.processEvents()  # Process any pending events.
-                
             if not self.stretch_added:
                 self.layout.addStretch(1)
                 self.stretch_added = True
-            
-            conn.close()
-        except sqlite3.OperationalError:
-            print('No tasks found')
-            notasklbl = QLabel("No tasks have been created. Create a new one by clicking the add button", alignment=Qt.AlignmentFlag.AlignCenter)
-            self.layout.addWidget(notasklbl)
-        self.layout.addStretch(1)
+
+        QTimer.singleShot(500, self.splashscreen.close_splash)
+
 
 
 if __name__ == '__main__':

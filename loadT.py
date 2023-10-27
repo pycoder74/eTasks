@@ -1,31 +1,38 @@
 from PyQt6.QtWidgets import QApplication, QMainWindow, QLabel, QVBoxLayout, QWidget
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, QThread, pyqtSignal
 import sqlite3
 from task_obj import Task
 
-def load_tasks(user_id, parent=None):
+class TaskLoaderThread(QThread):
+    tasksLoaded = pyqtSignal(list)
+
+    def __init__(self, user_id):
+        super().__init__()
+        self.user_id = user_id
+
+    def run(self):
+        tasks = load_tasks(self.user_id)
+        self.tasksLoaded.emit(tasks)
+
+def load_tasks(user_id):
     conn = sqlite3.connect('users.db')
     cursor = conn.cursor()
-    
-    cursor.execute("""SELECT COUNT(*) FROM tasks WHERE user = ?""", [user_id])
-    tasks_num = cursor.fetchone()[0]
-    
-    if tasks_num == 0:
-        notasklbl = QLabel("No tasks here. Create a new one by clicking + Add Task button", alignment=Qt.AlignmentFlag.AlignCenter)
-        parent.layout.addWidget(notasklbl)
-    else:
-        cursor.execute('SELECT * FROM tasks WHERE user = ?', [user_id])
-        rows = cursor.fetchall()
-        print('Rows:', rows)
-        
-        for row in rows:
-            _, taskname, priority, topic, task_group, sD, eD, sT, eT = row
-            
-            # Assuming `Task` is a PyQt6 widget and it takes taskname, sD, eD as its arguments.
-            loaded_task = Task(taskname, sD, eD)
-            parent.layout.addWidget(loaded_task)
+
+    cursor.execute('SELECT * FROM tasks WHERE user = ?', [user_id])
+    rows = cursor.fetchall()
 
     conn.close()
+    return rows
+
+def add_tasks_to_layout(tasks, layout):
+    if not tasks:
+        notasklbl = QLabel("No tasks here. Create a new one by clicking + Add Task button", alignment=Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(notasklbl)
+    else:
+        for row in tasks:
+            _, taskname, priority, topic, task_group, sD, eD, sT, eT = row
+            loaded_task = Task(taskname, sD, eD)
+            layout.addWidget(loaded_task)
 
 if __name__ == '__main__':
     app = QApplication([])
@@ -36,11 +43,10 @@ if __name__ == '__main__':
     
     layout = QVBoxLayout()
     central_widget.setLayout(layout)
-    
-    # Adding a layout attribute to the window for easier access in the load_tasks function
-    window.layout = layout
 
-    load_tasks('1', window)
-    
+    task_loader = TaskLoaderThread(user_id='1')
+    task_loader.tasksLoaded.connect(lambda tasks: add_tasks_to_layout(tasks, layout))
+    task_loader.start()
+
     window.show()
     app.exec()

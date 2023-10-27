@@ -26,7 +26,7 @@ class Home(QMainWindow):
         self.no_task_label.hide()  
         
         # Setup UI and load tasks
-        self.splashscreen = SplashScreen()
+        self.splashscreen = SplashScreen(self)
         self.splashscreen.resize(400, 400)
         screen_size = self.app.primaryScreen().size()
         x = (screen_size.width() - self.splashscreen.width()) // 2
@@ -88,7 +88,7 @@ class Home(QMainWindow):
         print('Loading tasks...')
         self.load_tasks()
         print('tasks loaded')
-        QTimer.singleShot(500, self.splashscreen.closeSplash)
+        QTimer.singleShot(500, self.splashscreen.close_splash)
     
         
         # Set the main layout

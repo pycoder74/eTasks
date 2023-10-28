@@ -9,13 +9,13 @@ import sqlite3
 from group_obj import Group
 from splashscreen import SplashScreen
 import time
-from loadT import TaskLoaderThread, load_tasks
+from loadT import TaskLoaderThread
 
 class Home(QMainWindow):
+    loadingProgress = pyqtSignal(int)
     def __init__(self, fname='', app = None, parent=None):
         super().__init__(parent)
         self.app = app
-
         # Initial setups
         self.stretch_added = False
         self.child_wins = []
@@ -27,7 +27,8 @@ class Home(QMainWindow):
         self.no_task_label.hide()  
         
         # Setup UI and load tasks
-        self.splashscreen = SplashScreen(self)
+        self.splashscreen = SplashScreen(self, span_ang=10)
+        self.loadingProgress.connect(self.splashscreen.updateLoadingProgress)
         self.splashscreen.resize(400, 400)
         screen_size = self.app.primaryScreen().size()
         x = (screen_size.width() - self.splashscreen.width()) // 2
@@ -37,10 +38,12 @@ class Home(QMainWindow):
         self.splashscreen.show()
         self.app.processEvents()
         self.setup_ui()
+        self.loadingProgress.emit(20)
 
 
 
     def setup_ui(self):
+        self.loadingProgress.emit(40)
         self.showMaximized()
         self.widget = QWidget()
         self.layout = QVBoxLayout()
@@ -49,6 +52,7 @@ class Home(QMainWindow):
         # Quickbar setup
         self.qb = QuickBar(self)
         self.layout.addWidget(self.qb)
+        self.loadingProgress.emit(60)
 
         conn = sqlite3.connect('users.db')
         cursor = conn.cursor()
@@ -59,6 +63,7 @@ class Home(QMainWindow):
 
 
         # Title setup
+        self.loadingProgress.emit(80)
         self.title = QLabel(f'Welcome, {self.fname}')
         self.title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.title.setStyleSheet("""
@@ -88,6 +93,7 @@ class Home(QMainWindow):
 
         print('Loading tasks...')
         self.load_tasks()
+        self.loadingProgress.emit(100)
         print('tasks loaded')
         QTimer.singleShot(500, self.splashscreen.close_splash)
     
@@ -204,9 +210,10 @@ QMenu::item:selected {
 
     def load_tasks(self):
         self.task_loading_thread = TaskLoaderThread(self.user_id)
+        self.loadingProgress.emit(50)
         self.task_loading_thread.tasksLoaded.connect(self.display_loaded_tasks)
         self.task_loading_thread.start()
-
+        self.loadingProgress.emit(100)
     def display_loaded_tasks(self, rows):
         if not rows:
             notasklbl = QLabel("No tasks have been created. Create a new one by clicking the add button", alignment=Qt.AlignmentFlag.AlignCenter)
@@ -220,6 +227,7 @@ QMenu::item:selected {
             if not self.stretch_added:
                 self.layout.addStretch(1)
                 self.stretch_added = True
+            self.loadingProgress.emit(100)
 
         QTimer.singleShot(500, self.splashscreen.close_splash)
 

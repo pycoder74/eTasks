@@ -18,7 +18,7 @@ def load_tasks(user_id):
     conn = sqlite3.connect('users.db')
     cursor = conn.cursor()
 
-    cursor.execute('SELECT * FROM tasks WHERE user = ?', [user_id])
+    cursor.execute('SELECT * FROM tasks WHERE user = ?', [user_id][0])
     rows = cursor.fetchall()
 
     conn.close()

@@ -44,7 +44,6 @@ class Home(QMainWindow):
 
     def setup_ui(self):
         self.loadingProgress.emit(40)
-        self.showMaximized()
         self.widget = QWidget()
         self.layout = QVBoxLayout()
 
@@ -93,9 +92,8 @@ class Home(QMainWindow):
 
         print('Loading tasks...')
         self.load_tasks()
-        self.loadingProgress.emit(100)
         print('tasks loaded')
-        QTimer.singleShot(500, self.splashscreen.close_splash)
+        QTimer.singleShot(500, self.splashscreen.close())
     
         
         # Set the main layout
@@ -103,9 +101,7 @@ class Home(QMainWindow):
         self.setCentralWidget(self.widget)
         self.layout.addStretch(1)
 
-        # Show the main window anc close splash
-        self.show()
-        
+        self.loadingProgress.emit(100)
 
 
     def setup_add_button(self):

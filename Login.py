@@ -85,10 +85,10 @@ class LoginWindow(QMainWindow):
 
                 c.execute("SELECT fname FROM users WHERE username=?", (username,))
                 self.fname = c.fetchone()[0]
+                self.close()
                 self.app = QApplication([])
                 self.home = Home(self.fname, self.app )
                 self.home.show()
-                self.close()
                 
             else:
                 warning = MessageBox(QMessageBox.Icon.Warning, "Invalid password")

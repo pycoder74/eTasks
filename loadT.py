@@ -18,8 +18,9 @@ def load_tasks(user_id):
     conn = sqlite3.connect('users.db')
     cursor = conn.cursor()
 
-    cursor.execute('SELECT * FROM tasks WHERE user = ?', [user_id][0])
+    cursor.execute('SELECT taskname, sD, eD FROM tasks WHERE user = ?', [user_id][0])
     rows = cursor.fetchall()
+    print(rows)
 
     conn.close()
     return rows
@@ -30,9 +31,12 @@ def add_tasks_to_layout(tasks, layout):
         layout.addWidget(notasklbl)
     else:
         for row in tasks:
-            _, taskname, priority, topic, task_group, sD, eD, sT, eT = row
-            loaded_task = Task(taskname, sD, eD)
+            taskname, sD, eD = row  # Unpack only the taskname
+            print(taskname, sD, eD)
+
+            loaded_task = Task(taskname, startDate=sD, endDate=eD)
             layout.addWidget(loaded_task)
+
 
 if __name__ == '__main__':
     app = QApplication([])

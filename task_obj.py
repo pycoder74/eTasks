@@ -1,6 +1,6 @@
 import sys
-from PyQt6.QtWidgets import QApplication, QSizePolicy, QFrame, QWidget, QVBoxLayout, QLabel, QCheckBox, QHBoxLayout
-from PyQt6.QtCore import Qt
+from PyQt6.QtWidgets import QMainWindow, QApplication, QSizePolicy, QFrame, QWidget, QVBoxLayout, QLabel, QCheckBox, QHBoxLayout
+from PyQt6.QtCore import Qt, QTimer
 
 class Task(QWidget):
     def __init__(self, taskname, startDate, endDate, parent=None):
@@ -13,8 +13,8 @@ class Task(QWidget):
 
         # Main Layout
         mainLayout = QVBoxLayout(self)
-        mainLayout.setSpacing(5)                 # Adjust spacing between widgets to 5 pixels
-        mainLayout.setContentsMargins(0, 0, 0, 0)  # Set margins to 10 pixels on all sides
+        mainLayout.setSpacing(5)
+        mainLayout.setContentsMargins(0, 0, 0, 0)
 
         mainframe = QFrame(self)
         mainframe.setFrameShape(QFrame.Shape.Box)
@@ -22,8 +22,9 @@ class Task(QWidget):
         mainframeLayout = QHBoxLayout(mainframe)
 
         # Check Box
-        checkBox = QCheckBox(self)
-        mainframeLayout.addWidget(checkBox)
+        self.checkBox = QCheckBox(self)
+        mainframeLayout.addWidget(self.checkBox)
+        self.checkBox.stateChanged.connect(self.checkbox_state_changed)  # Connect to the slot
 
         # Task Name Frame & Label
         tasknameFrame = QFrame(self)
@@ -58,12 +59,22 @@ class Task(QWidget):
         mainframeLayout.addWidget(dDateFrame)
         self.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
 
-  # sets both horizontal and vertical policies to Fixed
-
-
+    def checkbox_state_changed(self, state):
+        if state == Qt.CheckState.Unchecked:
+            print(f"Checkbox for task '{self.taskname}' is unchecked")
+        else:
+            print(f"Checkbox for task '{self.taskname}' is checked")
+            timer = QTimer(self)
+            timer.timeout.connect(self.hide)
+            timer.start(500)
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    mainWindow = Task('Task Name', 'sdate', 'edate')
+    mainWindow = QMainWindow()
+    central_widget = QWidget(mainWindow)
+    layout = QHBoxLayout(central_widget)
+    mainWindow.setCentralWidget(central_widget)
+    task = Task('task', 'sdate', 'edate', mainWindow)
+    layout.addWidget(task)
     mainWindow.showMaximized()
     sys.exit(app.exec())

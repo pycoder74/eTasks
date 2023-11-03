@@ -43,15 +43,12 @@ class SplashScreen(QSplashScreen):
         self.repaint()
 
     def updateArc(self):
-        if self.span_ang < 360:
-            self.span_ang += 10  # Increment by 10 degrees each time
-
-            # If full circle reached
-            if self.span_ang >= 360:
-                self.span_ang = 360  # Set the angle explicitly to 360
-                self.timer.stop()  # Stop the timer
-                self.fadeOutSplashScreen()  # Fade out the splash screen
-            self.repaint()  # Force a repaint to see the updated arc
+        # If full circle reached
+        if self.span_ang >= 360:
+            self.span_ang = 360  # Set the angle explicitly to 360
+            self.timer.stop()  # Stop the timer
+            self.onFadeOutFinished()  # Fade out the splash screen
+        self.repaint()  # Force a repaint to see the updated arc
 
     def fadeInMainWindow(self):
         # Create an animation for the main window's opacity
@@ -64,7 +61,6 @@ class SplashScreen(QSplashScreen):
 
     def onFadeOutFinished(self):
         self.close()
-        self.fadeInMainWindow()
 
 
     
@@ -72,7 +68,7 @@ if __name__ == "__main__":
     app = QApplication([])
 
     win = QMainWindow()
-    splash = SplashScreen(win, span_ang=10)
+    splash = SplashScreen(win, span_ang=0)
     splash.resize(400, 400)
     splash.show()
 

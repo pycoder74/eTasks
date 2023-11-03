@@ -17,6 +17,7 @@ class Home(QMainWindow):
         super().__init__(parent)
         self.app = app
         # Initial setups
+        self.showMaximized()
         self.stretch_added = False
         self.child_wins = []
         self.fname = fname
@@ -35,14 +36,13 @@ class Home(QMainWindow):
         y = (screen_size.height() - self.splashscreen.height()) // 2
 
         self.splashscreen.move(x, y)
-        self.splashscreen.show()
         self.app.processEvents()
         self.setup_ui()
-        self.loadingProgress.emit(20)
 
 
 
     def setup_ui(self):
+        self.splashscreen.show()
         self.loadingProgress.emit(40)
         self.widget = QWidget()
         self.layout = QVBoxLayout()
@@ -93,8 +93,6 @@ class Home(QMainWindow):
         print('Loading tasks...')
         self.load_tasks()
         print('tasks loaded')
-        QTimer.singleShot(500, self.splashscreen.close())
-    
         
         # Set the main layout
         self.widget.setLayout(self.layout)
@@ -201,9 +199,6 @@ QMenu::item:selected {
         self.win = AddGroupWindow(self.user_id[0])	
         self.win.show()
 
-
-        # ... [Other parts of the Home class]
-
     def load_tasks(self):
         self.task_loading_thread = TaskLoaderThread(self.user_id)
         self.loadingProgress.emit(50)
@@ -216,17 +211,14 @@ QMenu::item:selected {
             self.layout.addWidget(notasklbl)
         else:
             for row in rows:
-                _, taskname, _, _, _, sD, eD, _, _ = row
+                taskname, sD, eD, = row
                 loaded_task = Task(taskname, sD, eD)
                 self.widgets.append(loaded_task)
                 self.layout.addWidget(loaded_task)
             if not self.stretch_added:
                 self.layout.addStretch(1)
                 self.stretch_added = True
-            self.loadingProgress.emit(100)
-
-        QTimer.singleShot(500, self.splashscreen.close_splash)
-
+        QTimer.singleShot(500, self.splashscreen.onFadeOutFinished)
 
 
 if __name__ == '__main__':

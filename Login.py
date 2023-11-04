@@ -71,7 +71,10 @@ class LoginWindow(QMainWindow):
         conn = sqlite3.connect('users.db')
         c = conn.cursor()
         # Fetch the hashed password and salt for the given username
-        c.execute("SELECT password, salt FROM users WHERE username=?", (username,))
+        try:
+            c.execute("SELECT password, salt FROM users WHERE username=?", (username,))
+        except sqlite3.OperationalError as err:
+            noAccount = MessageBox(QMessageBox.Icon.Warning, "No account with these credentials")
         result = c.fetchone()
 
         if result:

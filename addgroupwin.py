@@ -6,7 +6,9 @@ import sys
 from etasksMessageBox import MessageBox
 from task_obj import Task
 from group_obj import Group
-class AddGroupWindow(QMainWindow):  # Inherit from QMainWindow
+from PyQt6.QtCore import pyqtSignal
+class AddGroupWindow(QMainWindow):  
+    groupAdded = pyqtSignal(str, str, list)
     def __init__(self, user_id='', parent=None):
         super().__init__(parent)
         self.user_id = user_id
@@ -55,6 +57,7 @@ class AddGroupWindow(QMainWindow):  # Inherit from QMainWindow
         # Provide feedback to the user
         saved = MessageBox(QMessageBox.Icon.Information, 'Group saved')
         saved.exec()
+        self.groupAdded.emit(name, topic, selected_tasks)
 
         # Close this window
         self.close()

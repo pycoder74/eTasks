@@ -197,7 +197,12 @@ QMenu::item:selected {
 
     def addGroup(self):
         self.win = AddGroupWindow(self.user_id[0])	
+        self.win.groupAdded.connect(self.add_group_to_gui)
         self.win.show()
+    
+    def add_group_to_gui(self, group_name, tasks = []):
+        new_group = Group(group_name, self)
+        self.layout.addWidget(new_group)
 
     def load_tasks(self):
         self.task_loading_thread = TaskLoaderThread(self.user_id)

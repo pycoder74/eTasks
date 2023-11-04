@@ -1,6 +1,7 @@
 import sys
-from PyQt6.QtWidgets import QMainWindow, QApplication, QSizePolicy, QFrame, QWidget, QVBoxLayout, QLabel, QCheckBox, QHBoxLayout
+from PyQt6.QtWidgets import QMessageBox, QMainWindow, QApplication, QSizePolicy, QFrame, QWidget, QVBoxLayout, QLabel, QCheckBox, QHBoxLayout
 from PyQt6.QtCore import Qt, QTimer
+from etasksMessageBox import MessageBox
 
 class Task(QWidget):
     def __init__(self, taskname, startDate, endDate, parent=None):
@@ -58,6 +59,12 @@ class Task(QWidget):
         dDateLayout.addWidget(endDateLabel)
         mainframeLayout.addWidget(dDateFrame)
         self.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
+    def complete(self):
+        if not hasattr(self, 'completed') or not self.completed:
+            self.hide()
+            self.completed = True  # Use a different variable name
+            completion = MessageBox(QMessageBox.Icon.Information, "Task Complete")
+            completion.exec()
 
     def checkbox_state_changed(self, state):
         if state == Qt.CheckState.Unchecked:
@@ -65,8 +72,9 @@ class Task(QWidget):
         else:
             print(f"Checkbox for task '{self.taskname}' is checked")
             timer = QTimer(self)
-            timer.timeout.connect(self.hide)
+            timer.timeout.connect(self.complete)
             timer.start(500)
+            
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

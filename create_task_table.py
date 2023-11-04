@@ -9,6 +9,7 @@ def create_table(cursor):
         sD TEXT,
         eD TEXT,
         sT TEXT,
-        eT TEXT
+        eT TEXT,
+        complete BOOL
         )
     """)

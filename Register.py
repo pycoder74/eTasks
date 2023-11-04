@@ -1,5 +1,6 @@
 from PyQt6.QtWidgets import QApplication, QPushButton, QLabel, QWidget, QMainWindow, QFormLayout, QMessageBox
 from Entries import Entry
+from create_task_table import create_table
 import sqlite3
 from etasksMessageBox import MessageBox
 from PyQt6.QtCore import Qt
@@ -95,6 +96,7 @@ class RegisterWindow(QMainWindow):
             password TEXT NOT NULL,
             salt TEXT NOT NULL
         )""")
+        create_table(c)
         
         # Check if username exists
         c.execute("SELECT * FROM users WHERE username=?", (username,))

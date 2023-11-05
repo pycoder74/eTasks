@@ -1,15 +1,14 @@
 import sys
 import sqlite3
-from PyQt6.QtWidgets import QMainWindow, QApplication, QWidget, QVBoxLayout, QLabel, QPushButton, QScrollArea, QFrame, QHBoxLayout, QSizePolicy
-from task_obj import Task  
+from PyQt6.QtWidgets import QMainWindow, QApplication, QWidget, QVBoxLayout, QLabel, QPushButton, QScrollArea, QFrame, QSizePolicy
+from task_obj import Task
 from PyQt6.QtCore import Qt
 
-QWIDGETSIZE_MAX = 2**31 - 1
-
 class Group(QWidget):
-    def __init__(self, name, parent=None):
+    def __init__(self, name, color, parent=None):
         super().__init__(parent)
-        
+        self.color = color
+
         # Layout for the entire group widget
         mainLayout = QVBoxLayout(self)
 
@@ -20,37 +19,42 @@ class Group(QWidget):
 
         # A label for the group name
         self.titleLabel = QLabel(name)
-        
+
         # Header contains the toggle button and the group title
-        headerLayout = QHBoxLayout()
+        headerLayout = QVBoxLayout()
         headerLayout.addWidget(self.toggleButton)
         headerLayout.addWidget(self.titleLabel)
-        mainLayout.addLayout(headerLayout)
+        headerFrame = QFrame(self)
+        headerFrame.setLayout(headerLayout)
+        headerFrame.setStyleSheet(f"border: 2px solid {self.color};")  # Set the border color for the header frame
+
+        # Create a colored frame to hold tasks
+        self.contentFrame = QFrame(self)
 
         # Content loading from the database
-        self.scrollArea = QScrollArea(self)
-        self.contentFrame = QFrame(self.scrollArea)
         self.contentLayout = QVBoxLayout(self.contentFrame)
+        self.scrollArea = QScrollArea(self)
 
         self.scrollArea.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.scrollArea.setWidgetResizable(True)
         self.scrollArea.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
-        
+
         conn = sqlite3.connect('users.db')
         cursor = conn.cursor()
         cursor.execute('SELECT * FROM tasks WHERE task_group=?', (name,))
-        
+
         for row in cursor.fetchall():
-            taskname, user, priority, topic, task_group, sD, eD, sT, eT = row
-            loaded_task = Task(taskname, sD, eD)
-            self.contentLayout.addWidget(loaded_task)
+            print(row)
+            ntask = Task(row[0], row[4], row[5])
+            self.contentLayout.addWidget(ntask)  # Add the Task widget to the contentLayout
 
         conn.close()
-        
+
         self.scrollArea.setWidget(self.contentFrame)
-        self.scrollArea.setWidgetResizable(True)
-        mainLayout.addWidget(self.scrollArea)
         self.scrollArea.setVisible(False)  # Initially hide the content
+
+        mainLayout.addWidget(headerFrame)
+        mainLayout.addWidget(self.scrollArea)
 
     def toggleContent(self):
         if self.scrollArea.isVisible():
@@ -69,8 +73,8 @@ if __name__ == '__main__':
     main_layout.setContentsMargins(0, 0, 0, 0)  # Left, Top, Right, Bottom
     main_layout.setSpacing(10)  # Adjust as needed
     window.setCentralWidget(central_widget)
-    group = Group(name='group4', parent=window)
-    group2 = Group(name='group', parent=window)
+    group = Group(name='group4', color='blue', parent=window)
+    group2 = Group(name='group', color='green', parent=window)
     main_layout.addWidget(group2)
     main_layout.addWidget(group)
     window.show()

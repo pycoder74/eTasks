@@ -200,9 +200,11 @@ QMenu::item:selected {
         self.win.groupAdded.connect(self.add_group_to_gui)
         self.win.show()
     
-    def add_group_to_gui(self, group_name, tasks = []):
-        new_group = Group(group_name, self)
-        self.layout.addWidget(new_group)
+    def add_group_to_gui(self, group_name, color):
+        new_group = Group(group_name, color, self)
+        top_action_layout = self.layout.itemAt(2)  # Index 2 is the top_action_layout
+        self.layout.insertLayout(3, top_action_layout)  # Insert the top_action_layout
+        self.layout.insertWidget(4, new_group)  # Insert the new group
 
     def load_tasks(self):
         self.task_loading_thread = TaskLoaderThread(self.user_id)
@@ -211,18 +213,14 @@ QMenu::item:selected {
         self.task_loading_thread.start()
         self.loadingProgress.emit(100)
     def display_loaded_tasks(self, rows):
-        if not rows:
-            notasklbl = QLabel("No tasks have been created. Create a new one by clicking the add button", alignment=Qt.AlignmentFlag.AlignCenter)
-            self.layout.addWidget(notasklbl)
-        else:
-            for row in rows:
-                taskname, sD, eD, = row
-                loaded_task = Task(taskname, sD, eD)
-                self.widgets.append(loaded_task)
-                self.layout.addWidget(loaded_task)
-            if not self.stretch_added:
-                self.layout.addStretch(1)
-                self.stretch_added = True
+        for row in rows:
+            taskname, sD, eD, = row
+            loaded_task = Task(taskname, sD, eD)
+            self.widgets.append(loaded_task)
+            self.layout.addWidget(loaded_task)
+        if not self.stretch_added:
+            self.layout.addStretch(1)
+            self.stretch_added = True
         QTimer.singleShot(500, self.splashscreen.onFadeOutFinished)
 
 

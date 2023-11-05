@@ -1,7 +1,10 @@
+import typing
+from PyQt6 import QtCore
 from PyQt6.QtWidgets import (QApplication, QListWidget, QLabel, QCheckBox, QWidget, QMainWindow, QFormLayout, QToolButton, QPushButton,
-                             QMenu, QCalendarWidget, QDialog, QVBoxLayout, QLineEdit, QHBoxLayout, QRadioButton, QTimeEdit, QComboBox)
+                             QMenu, QCalendarWidget, QDialog, QVBoxLayout, QLineEdit, QHBoxLayout, QRadioButton, QTimeEdit, QComboBox,
+                             QColorDialog)
 from PyQt6.QtCore import QDate, Qt, QEvent
-from PyQt6.QtGui import QPixmap, QIcon
+from PyQt6.QtGui import QPixmap, QIcon, QColor
 
 
 class Entry:
@@ -223,15 +226,53 @@ class Entry:
 
         def get_value(self):
             return [action.text() for action in self.button.menu().actions() if action.isChecked()]
+    class ColorPicker(QWidget):
+        def __init__(self, parent = None):
+            super().__init__()
+
+            self.initUI()
+
+        def initUI(self):
+            layout = QVBoxLayout()
+
+            self.color_button = QPushButton("Pick a Color", self)
+            self.color_button.clicked.connect(self.showColorDialog)
+
+            self.color_label = QLabel("Selected Color: None", self)
+
+            layout.addWidget(self.color_button)
+            layout.addWidget(self.color_label)
+
+            self.setLayout(layout)
+
+        def showColorDialog(self):
+            color = QColorDialog.getColor()
+            if color.isValid():
+                self.color_label.setText(f"Selected Color: {color.name()}")
+    class ColorEntry(QWidget):
+            def __init__(self, text, *args, **kwargs):
+                super().__init__(*args, **kwargs)
+
+                layout = QFormLayout()
+                self.label = QLabel(text)
+                self.color_picker = Entry.ColorPicker()  # Create an instance of the ColorPicker widget
+
+                layout.addRow(self.label, self.color_picker)
+                self.setLayout(layout)
+
+            def get_value(self):
+                return self.color_picker.color_label.text()
 
 if __name__ == '__main__':
     app = QApplication([])
+
     window = QMainWindow()
+    window.setWindowTitle("Color Picker Integration")
+    window.setGeometry(100, 100, 400, 200)
 
-    items = ["Task 1", "Task 2", "Task 3", "Task 4"]
-    multi_select = Entry.MultiSelectDropEntry("Select Tasks:", items)
-    window.setCentralWidget(multi_select)
-    window.resize(400, 200)
+    entry = Entry.ColorEntry("Select Color:")
 
+    window.setCentralWidget(entry)
     window.show()
+
     app.exec()

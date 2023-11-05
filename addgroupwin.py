@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QApplication, QMessageBox, QPushButton, QLabel, QWidget, QMainWindow, QFormLayout
+from PyQt6.QtWidgets import QApplication, QMessageBox, QPushButton, QColorDialog, QWidget, QMainWindow, QFormLayout
 from Entries import Entry  # Assuming Entries module provides Entry class.
 from loadGT import get_topics, get_tasks
 import sqlite3
@@ -7,8 +7,9 @@ from etasksMessageBox import MessageBox
 from task_obj import Task
 from group_obj import Group
 from PyQt6.QtCore import pyqtSignal
+from PyQt6.QtGui import QColor
 class AddGroupWindow(QMainWindow):  
-    groupAdded = pyqtSignal(str, str, list)
+    groupAdded = pyqtSignal(str, str, str, list)
     def __init__(self, user_id='', parent=None):
         super().__init__(parent)
         self.user_id = user_id
@@ -34,6 +35,9 @@ class AddGroupWindow(QMainWindow):
         print(tasks)
         self.task_choose = Entry.MultiSelectDropEntry(text='Tasks:', items=tasks)
         self.layout.addRow(self.task_choose)
+        
+        self.colorentry = Entry.ColorEntry("Select Color:")
+        self.layout.addRow(self.colorentry)
 
         # Save Button
         self.save_button = QPushButton(text='Save')
@@ -50,14 +54,14 @@ class AddGroupWindow(QMainWindow):
         name = self.groupEntry.get_value()
         topic = self.topic_choose.get_value() 
         selected_tasks = self.task_choose.get_value()  # Assuming this returns a list of task names.
-
+        color = self.colorentry.get_value()
         # Update the database
         self.update_tasks_with_group(name, selected_tasks)
 
         # Provide feedback to the user
         saved = MessageBox(QMessageBox.Icon.Information, 'Group saved')
         saved.exec()
-        self.groupAdded.emit(name, topic, selected_tasks)
+        self.groupAdded.emit(name, topic, color, selected_tasks)
 
         # Close this window
         self.close()

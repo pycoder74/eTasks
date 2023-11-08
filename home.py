@@ -91,7 +91,8 @@ class Home(QMainWindow):
         self.app.processEvents()
 
         print('Loading tasks...')
-        self.load_tasks()
+        tasks = self.load_tasks()
+        self.display_loaded_tasks(tasks)
         print('tasks loaded')
         
         # Set the main layout
@@ -188,12 +189,9 @@ QMenu::item:selected {
     def add_task_to_gui(self, task_name, start_date, end_date):
         new_task = Task(task_name, start_date, end_date)
         self.widgets.append(new_task)
-        
-        # If stretch is added, insert the task just before the stretch
-        if self.stretch_added:
-            self.layout.insertWidget(len(self.widgets) - 1, new_task)
-        else:
-            self.layout.addWidget(new_task)
+        self.tasklayout = self.layout.itemAt(2)
+        self.layout.insertLayout(3, self.tasklayout)
+        self.layout.insertWidget(4, new_task)
 
     def addGroup(self):
         self.win = AddGroupWindow(self.user_id[0])	

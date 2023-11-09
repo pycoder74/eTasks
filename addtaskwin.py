@@ -74,43 +74,43 @@ class AddTaskWindow(QMainWindow):
     def add_task(self):
         conn = sqlite3.connect('users.db')
         c = conn.cursor()
+        if not self.taskEntry.get_value():
+            warning = MessageBox(QMessageBox.Icon.Warning, "Please enter a task name")
+            warning.exec()
+            return
+
+        taskN = self.taskEntry.get_value()
+        pri = self.prientry.get_value()
+        topic = ','.join(self.topic_choose.get_value())
+        group = ','.join(self.group_choose.get_value())
+
+        sD = self.start_entry.get_date_value()
+        eD = self.end_entry.get_date_value()
+        sT = self.start_entry.get_time_value()
+        eT = self.end_entry.get_time_value()
+
+
+
+
 
         try:
-            if not self.taskEntry.get_value():
-                warning = MessageBox(QMessageBox.Icon.Warning, "Please enter a task name")
-                warning.exec()
-                return
-
-            taskN = self.taskEntry.get_value()
-            pri = self.prientry.get_value()
-            topic = ','.join(self.topic_choose.get_value())
-            group = ','.join(self.group_choose.get_value())
-
-            sD = self.start_entry.get_date_value()
-            eD = self.end_entry.get_date_value()
-            sT = self.start_entry.get_time_value()
-            eT = self.end_entry.get_time_value()
-
-
-
-
-
-            
             c.execute("""
-INSERT INTO tasks(
-taskname, user, priority, topic, task_group, sD, eD, sT, eT)
-                         VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?
+            INSERT INTO tasks(
+            taskname, user, priority, topic, task_group, sD, eD, sT, eT)
+                        VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?
 
-                         )""", (taskN, self.user_id, pri, topic, group, sD, eD, sT, eT))
+                        )""", (taskN, self.user_id, pri, topic, group, sD, eD, sT, eT))
             conn.commit()
-            print('Task saved to db')
-
             self.taskAdded.emit(taskN, sD, eD)
+            print('Task saved to db')
+        except sqlite3.IntegrityError:
+            warning = MessageBox(QMessageBox.warning, text = 'A task already has the same name.')
+            warning.show()
         finally:
             conn.close()  # Ensure connection is always closed
 
 if __name__ == "__main__":
     app = QApplication([])
-    window = AddTaskWindow('elliott')
+    window = AddTaskWindow('Elliott')
     window.show()
     app.exec()

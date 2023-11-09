@@ -9,21 +9,24 @@ class TaskLoaderThread(QThread):
     def __init__(self, user_id):
         super().__init__()
         self.user_id = user_id
+    
+    def load_tasks(self, user_id):
+        conn = sqlite3.connect('users.db')
+        cursor = conn.cursor()
+
+        cursor.execute('SELECT taskname, sD, eD FROM tasks WHERE user = ? AND complete = FALSE', [user_id])
+        rows = cursor.fetchall()
+        print(rows)
+
+        conn.close()
+        return rows
 
     def run(self):
-        tasks = load_tasks(self.user_id)
+        tasks = self.load_tasks(self.user_id[0])
         self.tasksLoaded.emit(tasks)
 
-def load_tasks(user_id):
-    conn = sqlite3.connect('users.db')
-    cursor = conn.cursor()
 
-    cursor.execute('SELECT taskname, sD, eD FROM tasks WHERE user = ? AND complete = FALSE', [user_id][0])
-    rows = cursor.fetchall()
-    print(rows)
 
-    conn.close()
-    return rows
 
 def add_tasks_to_layout(tasks, layout):
     if not tasks:

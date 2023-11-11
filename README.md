@@ -1,4 +1,4 @@
-# eTasks
+
 
 # eTasks
 
@@ -35,7 +35,7 @@ eTasks is a cutting-edge task management application that combines automation an
 
    Access eTasks through [http://localhost:3000](http://localhost:3000).
 
-#This project is still under development. Currently s very simple app but will get bigger and better over time. Feel free to help!
+Note: This project is still at a very early stage of development. Currently s very simple app but will get bigger and better over time. Feel free to help!
 ## Contributing
 
 We welcome contributions! If you have ideas for improvements or discover any issues, please open an [issue](https://github.com/pycoder74/eTasks/issues) or submit a [pull request](https://github.com/pycoder74/eTasks/pulls).

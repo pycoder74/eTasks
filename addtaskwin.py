@@ -96,15 +96,15 @@ class AddTaskWindow(QMainWindow):
         try:
             c.execute("""
             INSERT INTO tasks(
-            taskname, user, priority, topic, task_group, sD, eD, sT, eT)
-                        VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?
+            taskname, user, priority, topic, task_group, sD, eD, sT, eT, complete)
+                        VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?
 
-                        )""", (taskN, self.user_id, pri, topic, group, sD, eD, sT, eT))
+                        )""", (taskN, self.user_id, pri, topic, group, sD, eD, sT, eT, 0))
             conn.commit()
             self.taskAdded.emit(taskN, sD, eD)
             print('Task saved to db')
         except sqlite3.IntegrityError:
-            warning = MessageBox(QMessageBox.warning, text = 'A task already has the same name.')
+            warning = MessageBox(QMessageBox.type.warning, text = 'A task already has the same name.')
             warning.show()
         finally:
             conn.close()  # Ensure connection is always closed

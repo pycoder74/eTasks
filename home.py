@@ -9,7 +9,7 @@ from task_obj import Task
 import sqlite3
 from group_obj import Group
 from splashscreen import SplashScreen
-from loadT import TaskLoaderThread, add_tasks_to_layout
+from loadT import TaskLoaderThread
 
 class Home(QMainWindow):
     loadingProgress = pyqtSignal(int)
@@ -205,20 +205,18 @@ QMenu::item:selected {
         self.layout.insertWidget(4, new_group)
 
     def load_tasks(self):
-        task_loader = TaskLoaderThread(user_id='1')
-        task_loader.tasksLoaded.connect(lambda tasks: add_tasks_to_layout(tasks, self.layout))
-        task_loader.finished.connect(self.loading_done)
-        self.loadingProgress.emit(100)
-        task_loader.start()
+        self.task_loader = TaskLoaderThread(user_id='1')
+        self.task_loader.tasksLoaded.connect(lambda tasks: self.task_loader.add_tasks_to_layout(tasks, self.layout))
+        # Connect the thread's finished signal to the cleanup function
+        self.task_loader.finished.connect(self.task_loader.on_thread_finished)
 
-    def loading_done(self):
-        self.loadingProgress.disconnect(self.splashscreen.updateLoadingProgress)
-        self.splashscreen.hide()
-        self.app.processEvents()
-        self.loadingProgress.disconnect(self.loading_done)
+        # Start the thread
+        self.task_loader.start()
 
 if __name__ == '__main__':
     app = QApplication([])
     window = QMainWindow()
     main_win = Home('Elliott', app, window)
+    main_win.load_tasks()  # Start loading tasks
+    window.show()
     app.exec()

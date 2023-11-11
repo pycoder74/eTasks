@@ -1,8 +1,9 @@
 import sys
-from PyQt6.QtWidgets import QMessageBox, QMainWindow, QApplication, QSizePolicy, QFrame, QWidget, QVBoxLayout, QLabel, QCheckBox, QHBoxLayout
+from PyQt6.QtWidgets import QMessageBox, QMainWindow, QApplication, QSizePolicy, QFrame, QWidget, QVBoxLayout, QLabel, QCheckBox, QHBoxLayout, QPushButton
 from PyQt6.QtCore import Qt, QTimer
 from etasksMessageBox import MessageBox
-
+import sqlite3
+from ImageButton import ImageButton
 class Task(QWidget):
     def __init__(self, taskname, startDate, endDate, parent=None):
         super(Task, self).__init__(parent)
@@ -27,6 +28,9 @@ class Task(QWidget):
         mainframeLayout.addWidget(self.checkBox)
         self.checkBox.stateChanged.connect(self.checkbox_state_changed)  # Connect to the slot
 
+        self.bin_icon = QPushButton(text = 'Delete')
+        self.bin_icon.clicked.connect(self.delete)
+        mainframeLayout.addWidget(self.bin_icon)
         # Task Name Frame & Label
         tasknameFrame = QFrame(self)
         tasknameFrame.setFrameShape(QFrame.Shape.Box)
@@ -63,8 +67,33 @@ class Task(QWidget):
         if not hasattr(self, 'completed') or not self.completed:
             self.hide()
             self.completed = True  # Use a different variable name
-            completion = MessageBox(QMessageBox.Icon.Information, "Task Complete")
+            conn = sqlite3.connect('users.db')
+            c = conn.cursor()
+            c.execute(""" UPDATE tasks SET complete = TRUE WHERE taskname = ?""",(self.taskname,))
+            conn.commit()
+            conn.close()
+            completion = MessageBox(type_= QMessageBox.Icon.Information, text = "Task Complete")
             completion.exec()
+    def delete(self):
+        # Create a QMessageBox
+        msgBox = MessageBox(QMessageBox.Icon.Warning, "Are you sure you want to delete this task?")
+        msgBox.setStandardButtons(QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Cancel)
+
+        # Execute the QMessageBox and get the result
+        result = msgBox.exec()
+
+        # Check the result
+        if result == QMessageBox.StandardButton.Ok:
+            # User pressed OK, proceed with deletion
+            self.hide()
+            conn = sqlite3.connect('users.db')
+            c = conn.cursor()
+            c.execute(""" DELETE FROM tasks WHERE taskname = ?""", (self.taskname,))
+            conn.commit()
+            conn.close()
+        else:
+            # User pressed Cancel, do nothing or handle accordingly
+            print("Deletion canceled")
 
     def checkbox_state_changed(self, state):
         if state == Qt.CheckState.Unchecked:

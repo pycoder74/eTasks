@@ -11,34 +11,34 @@ class TaskLoaderThread(QThread):
         self.user_id = user_id
     
     def load_tasks(self, user_id):
-        conn = sqlite3.connect('users.db')
-        cursor = conn.cursor()
-
-        cursor.execute('SELECT taskname, sD, eD FROM tasks WHERE user = ? AND complete = FALSE', [user_id])
-        rows = cursor.fetchall()
-        print(rows)
-
-        conn.close()
-        return rows
+        tasks = []
+        try:
+            with sqlite3.connect('users.db') as conn:
+                cursor = conn.cursor()
+                cursor.execute('SELECT taskname, sD, eD FROM tasks WHERE user = ? AND (complete IS NULL OR complete = 0)', [user_id])
+                tasks = cursor.fetchall()
+        except sqlite3.Error as e:
+            print(f"Error loading tasks: {e}")
+        return tasks
 
     def run(self):
         tasks = self.load_tasks(self.user_id[0])
         self.tasksLoaded.emit(tasks)
 
+    def on_thread_finished(self):
+        print("Thread finished.")
 
+    def add_tasks_to_layout(self, tasks, layout):
+        if not tasks:
+            notasklbl = QLabel("No tasks here. Create a new one by clicking + Add Task button", alignment=Qt.AlignmentFlag.AlignCenter)
+            layout.addWidget(notasklbl)
+        else:
+            for row in tasks:
+                taskname, sD, eD = row  # Unpack only the taskname
+                print(taskname, sD, eD)
 
-
-def add_tasks_to_layout(tasks, layout):
-    if not tasks:
-        notasklbl = QLabel("No tasks here. Create a new one by clicking + Add Task button", alignment=Qt.AlignmentFlag.AlignCenter)
-        layout.addWidget(notasklbl)
-    else:
-        for row in tasks:
-            taskname, sD, eD = row  # Unpack only the taskname
-            print(taskname, sD, eD)
-
-            loaded_task = Task(taskname, startDate=sD, endDate=eD)
-            layout.addWidget(loaded_task)
+                loaded_task = Task(taskname, startDate=sD, endDate=eD)
+                layout.addWidget(loaded_task)
 
 
 if __name__ == '__main__':
@@ -52,8 +52,13 @@ if __name__ == '__main__':
     central_widget.setLayout(layout)
 
     task_loader = TaskLoaderThread(user_id='1')
-    task_loader.tasksLoaded.connect(lambda tasks: add_tasks_to_layout(tasks, layout))
+    task_loader.tasksLoaded.connect(lambda tasks: task_loader.add_tasks_to_layout(tasks, layout))
+
+    # Connect the thread's finished signal to the cleanup function
+    task_loader.finished.connect(task_loader.on_thread_finished)
+
+    # Start loading tasks after the main window is shown
+    window.show()
     task_loader.start()
 
-    window.show()
     app.exec()

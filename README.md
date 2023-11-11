@@ -33,8 +33,6 @@ eTasks is a cutting-edge task management application that combines automation an
    npm start
    ```
 
-   Access eTasks through [http://localhost:3000](http://localhost:3000).
-
 Note: This project is still at a very early stage of development. Currently s very simple app but will get bigger and better over time. Feel free to help!
 ## Contributing
 

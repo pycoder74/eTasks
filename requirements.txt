@@ -1,9 +1,6 @@
 pyqt6
-sqlite3
-sys
 bcrypt
 pandas
 tabulate
 asyncio
-subprocess
 aiohttp

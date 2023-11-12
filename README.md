@@ -23,11 +23,14 @@ eTasks is a cutting-edge task management application that combines automation an
    cd eTasks
    ```
 
-4. **Run the App:**
+4. **Install Dependencies:**
    ```
-   python -m eTasks
+   pip install -r requirements.txt
    ```
-
+5. **Run App:**
+   ```
+   python -m main
+   ```
 Note: This project is still at a very early stage of development. Currently s very simple app but will get bigger and better over time. Feel free to help!
 ## Contributing
 

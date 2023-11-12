@@ -12,6 +12,7 @@ class Task(QWidget):
         self.taskname = taskname
         self.startDate = startDate
         self.endDate = endDate
+        self.parent = parent
 
         # Main Layout
         mainLayout = QVBoxLayout(self)
@@ -75,25 +76,31 @@ class Task(QWidget):
             completion = MessageBox(type_= QMessageBox.Icon.Information, text = "Task Complete")
             completion.exec()
     def delete(self):
-        # Create a QMessageBox
         msgBox = MessageBox(QMessageBox.Icon.Warning, "Are you sure you want to delete this task?")
         msgBox.setStandardButtons(QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Cancel)
 
-        # Execute the QMessageBox and get the result
         result = msgBox.exec()
 
-        # Check the result
         if result == QMessageBox.StandardButton.Ok:
-            # User pressed OK, proceed with deletion
             self.hide()
-            conn = sqlite3.connect('users.db')
-            c = conn.cursor()
-            c.execute(""" DELETE FROM tasks WHERE taskname = ?""", (self.taskname,))
-            conn.commit()
-            conn.close()
-        else:
-            # User pressed Cancel, do nothing or handle accordingly
-            print("Deletion canceled")
+            doublecheck = MessageBox(QMessageBox.Icon.Warning, 'Task Deleted')
+            undo_btn = QPushButton("Undo")
+            ok_btn = QPushButton("OK")
+            doublecheck.addButton(undo_btn, QMessageBox.ButtonRole.RejectRole)
+            doublecheck.addButton(ok_btn, QMessageBox.ButtonRole.AcceptRole)
+            result = doublecheck.exec()
+
+            if result == QMessageBox.ButtonRole.AcceptRole:
+                with sqlite3.connect('users.db') as conn:
+                    c = conn.cursor()
+                    c.execute(""" DELETE FROM tasks WHERE taskname = ?""", (self.taskname,))
+                    conn.commit()
+                    conn.close()
+            else:
+                self.show()
+                cancelled = MessageBox(QMessageBox.Icon.Information, 'Cancelled')
+                cancelled.exec()
+
 
     def checkbox_state_changed(self, state):
         if state == Qt.CheckState.Unchecked:

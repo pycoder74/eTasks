@@ -20,6 +20,13 @@ class Task(QWidget):
         mainLayout.setContentsMargins(0, 0, 0, 0)
 
         mainframe = QFrame(self)
+        mainframe.setObjectName("mainframe")
+        mainframe.setStyleSheet(
+    """ #mainframe {
+        border: 2px solid #000000;
+        }"""
+)
+
         mainframe.setFrameShape(QFrame.Shape.Box)
         mainLayout.addWidget(mainframe, alignment=Qt.AlignmentFlag.AlignTop)
         mainframeLayout = QHBoxLayout(mainframe)

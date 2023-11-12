@@ -1,5 +1,5 @@
 import sys
-from PyQt6.QtWidgets import QSizePolicy, QMenu, QMainWindow, QApplication, QWidget, QVBoxLayout, QLabel, QToolButton, QLineEdit, QHBoxLayout
+from PyQt6.QtWidgets import QSizePolicy, QMenu, QMainWindow, QApplication, QFrame, QWidget, QVBoxLayout, QLabel, QToolButton, QLineEdit, QHBoxLayout
 from quickbarV2 import QuickBar  # Assuming this import is correct
 from PyQt6.QtCore import Qt, pyqtSignal, QTimer, QThread
 from addtaskwin import AddTaskWindow  # Assuming this import is correct
@@ -17,7 +17,6 @@ class Home(QMainWindow):
     def __init__(self, fname='', app=None, parent=None):
         super().__init__(parent)
         self.app = app
-        self.showMaximized()
         self.stretch_added = False
         self.child_wins = []
         self.fname = fname
@@ -27,6 +26,8 @@ class Home(QMainWindow):
         self.no_task_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.no_task_label.hide()
         self.setup_ui()
+        self.load_tasks()
+        self.show()
     
     def display_loaded_tasks(self, rows):
         for row in rows:
@@ -60,6 +61,16 @@ class Home(QMainWindow):
         self.layout.addWidget(self.qb)
         self.loadingProgress.emit(60)
 
+        self.task_frame = QFrame()
+        self.task_frame.setObjectName('task_frame')
+        self.task_frame.setStyleSheet(
+            """#task_frame{
+            border: 2px solid #00008B
+            }"""
+        )
+        self.task_layout = QVBoxLayout()
+        self.task_frame.setLayout(self.task_layout)
+
         conn = sqlite3.connect('users.db')
         cursor = conn.cursor()
         cursor.execute("""SELECT id FROM users WHERE fname = ?""", (self.fname,))
@@ -91,6 +102,7 @@ class Home(QMainWindow):
         top_action_layout.addWidget(self.search_bar)
         if top_action_layout.parent() is None:
             self.layout.addLayout(top_action_layout)
+        self.layout.addWidget(self.task_frame)
 
         # Add the no task label to the layout
         self.layout.addWidget(self.no_task_label)
@@ -188,11 +200,8 @@ QMenu::item:selected {
 
     def add_task_to_gui(self, task_name, start_date, end_date):
         new_task = Task(task_name, start_date, end_date)
+        self.task_layout.addWidget(new_task)
         self.widgets.append(new_task)
-        self.tasklayout = self.layout.itemAt(2)
-        self.layout.insertLayout(3, self.tasklayout)
-        self.layout.insertWidget(4, new_task)
-
     def addGroup(self):
         self.win = AddGroupWindow(self.user_id[0])
         self.win.groupAdded.connect(self.add_group_to_gui)
@@ -206,7 +215,7 @@ QMenu::item:selected {
 
     def load_tasks(self):
         self.task_loader = TaskLoaderThread(user_id='1')
-        self.task_loader.tasksLoaded.connect(lambda tasks: self.task_loader.add_tasks_to_layout(tasks, self.layout))
+        self.task_loader.tasksLoaded.connect(lambda tasks: self.task_loader.add_tasks_to_layout(tasks, self.task_layout))
         # Connect the thread's finished signal to the cleanup function
         self.task_loader.finished.connect(self.task_loader.on_thread_finished)
 
@@ -217,6 +226,6 @@ if __name__ == '__main__':
     app = QApplication([])
     window = QMainWindow()
     main_win = Home('Elliott', app, window)
-    main_win.load_tasks()  # Start loading tasks
-    window.show()
+    #main_win.load_tasks()  # Start loading tasks  
+    main_win.show()  
     app.exec()

@@ -83,7 +83,10 @@ class AddTaskWindow(QMainWindow):
         pri = self.prientry.get_value()
         topic = ','.join(self.topic_choose.get_value())
         group = ','.join(self.group_choose.get_value())
-
+        if group is '':
+            group = 'NULL'
+        else:
+            pass
         sD = self.start_entry.get_date_value()
         eD = self.end_entry.get_date_value()
         sT = self.start_entry.get_time_value()

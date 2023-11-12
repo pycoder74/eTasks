@@ -41,7 +41,12 @@ class Group(QWidget):
 
         conn = sqlite3.connect('users.db')
         cursor = conn.cursor()
-        cursor.execute('SELECT * FROM tasks WHERE task_group=?', (name,))
+        if name == 'Not Sorted':
+            cursor.execute('SELECT * FROM tasks WHERE task_group = NULL')
+        else:
+            cursor.execute('SELECT * FROM tasks WHERE task_group IS ? AND complete IS NULL', (name,))
+
+            
 
         for row in cursor.fetchall():
             print(row)
@@ -74,7 +79,7 @@ if __name__ == '__main__':
     main_layout.setSpacing(10)  # Adjust as needed
     window.setCentralWidget(central_widget)
     group = Group(name='group4', color='blue', parent=window)
-    group2 = Group(name='group', color='green', parent=window)
+    group2 = Group(name='Not Sorted', color='green', parent=window)
     main_layout.addWidget(group2)
     main_layout.addWidget(group)
     window.show()

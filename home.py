@@ -28,6 +28,12 @@ class Home(QMainWindow):
         self.setup_ui()
         self.load_tasks()
         self.show()
+        def refresh_application(self):
+            # Reset or reload necessary data
+            self.widgets = []  # Clear the list of widgets
+            self.no_task_label.hide()  # Hide the "No Tasks Found" label
+            self.stretch_added = False  # Reset the stretch flag
+            self.load_tasks()  # Reload tasks
     
     def display_loaded_tasks(self, rows):
         for row in rows:
@@ -200,22 +206,53 @@ QMenu::item:selected {
 
     def add_task_to_gui(self, task_name, start_date, end_date):
         new_task = Task(task_name, start_date, end_date)
-        self.task_layout.addWidget(new_task)
-        self.widgets.append(new_task)
+
+        # Retrieve the group information from the database
+        group_name = self.get_group_from_database(new_task.taskname)
+
+        # If the task has a group, add it to the corresponding group
+        if group_name:
+            # Find the group with the matching name
+            matching_group = next((group for group in self.task_frame.children() if isinstance(group, Group) and group.name == group_name), None)
+
+            if matching_group:
+                matching_group.add_task(new_task)
+                
+            
+            # If the task doesn't have a group, add it to the 'Unsorted' group
+            unsorted_group = next((group for group in self.task_frame.children() if isinstance(group, Group) and group.name == 'Unsorted'), None)
+
+            if unsorted_group:
+                unsorted_group.add_task(new_task)
+            else:
+                # Handle the case where the 'Unsorted' group doesn't exist
+                print("Error: 'Unsorted' group not found.")
+
+    def get_group_from_database(self, taskname):
+        try:
+            with sqlite3.connect('users.db') as conn:
+                cursor = conn.cursor()
+                cursor.execute('SELECT task_group FROM tasks WHERE taskname = ?', [taskname])
+                group_name = cursor.fetchone()
+                return group_name[0] if group_name else None
+        except sqlite3.Error as e:
+            print(f"Error retrieving group information: {e}")
+            return None
     def addGroup(self):
         self.win = AddGroupWindow(self.user_id[0])
         self.win.groupAdded.connect(self.add_group_to_gui)
         self.win.show()
+        self.refresh_application()
 
     def add_group_to_gui(self, group_name, color):
-        new_group = Group(group_name, color, self)
-        place = self.layout.itemAt(2)
-        self.layout.insertLayout(3, place)
+        new_group = Group(group_name, color, parent=self.task_frame)
         self.layout.insertWidget(4, new_group)
+
+
 
     def load_tasks(self):
         self.task_loader = TaskLoaderThread(user_id='1')
-        self.task_loader.tasksLoaded.connect(lambda tasks: self.task_loader.add_tasks_to_layout(tasks, self.task_layout))
+        self.task_loader.tasksLoaded.connect(lambda tasks: self.task_loader.add_tasks_to_group(tasks, self.task_layout))
         # Connect the thread's finished signal to the cleanup function
         self.task_loader.finished.connect(self.task_loader.on_thread_finished)
 

@@ -6,17 +6,21 @@ from group_obj import Group
 
 class TaskLoaderThread(QThread):
     tasksLoaded = pyqtSignal(list)
+    groupsLoaded = []  # Class-level variable to track loaded groups
 
     def __init__(self, user_id):
         super().__init__()
         self.user_id = user_id
-    
-    def load_tasks_no_group(self, user_id):
+
+    def load_tasks(self, user_id):
         tasks = []
         try:
             with sqlite3.connect('users.db') as conn:
                 cursor = conn.cursor()
-                cursor.execute('SELECT taskname, sD, eD FROM tasks  WHERE user = ? AND (task_group IS NULL) AND (complete IS NULL OR complete = 0)', [user_id])
+                cursor.execute(
+                    'SELECT taskname, sD, eD, task_group FROM tasks WHERE user = ? AND (task_group IS NULL) AND (complete IS NULL OR complete = 0)',
+                    [user_id]
+                )
                 tasks = cursor.fetchall()
                 print(tasks)
         except sqlite3.Error as e:
@@ -27,40 +31,33 @@ class TaskLoaderThread(QThread):
         tasks = self.load_tasks(self.user_id[0])
         self.tasksLoaded.emit(tasks)
 
-    def on_thread_finished(self):
-        print("Thread finished.")
-
     def add_tasks_to_group(self, tasks, layout):
+        unsorted_group = None  # Initialize unsorted_group variable
         if not tasks:
             notasklbl = QLabel("No tasks here. Create a new one by clicking + Add Task button", alignment=Qt.AlignmentFlag.AlignCenter)
             layout.addWidget(notasklbl)
         else:
             for row in tasks:
-                taskname, sD, eD = row  # Unpack only the taskname
-                print(taskname, sD, eD)
-                group = Group(name = 'Not Sorted', color = '#000000', parent = layout)
+                taskname, sD, eD, task_group = row  # Unpack task details
+                group_name = task_group if task_group else 'Not Sorted'
+
+                # Check if the group has already been loaded
+                if group_name not in TaskLoaderThread.groupsLoaded:
+                    new_group = Group(name=group_name, color='#000000', parent_layout=layout)
+                    TaskLoaderThread.groupsLoaded.append(group_name)
+
                 loaded_task = Task(taskname, startDate=sD, endDate=eD)
-                layout.addWidget(loaded_task)
 
+                if group_name == 'Unsorted':
+                    unsorted_group = new_group  # Assign the 'Unsorted' group
 
-if __name__ == '__main__':
-    app = QApplication([])
+                if new_group and new_group is not unsorted_group:
+                    new_group.add_task(loaded_task)
 
-    window = QMainWindow()
-    central_widget = QWidget()
-    window.setCentralWidget(central_widget)
-    
-    layout = QVBoxLayout()
-    central_widget.setLayout(layout)
+            # If there is an 'Unsorted' group, add unsorted tasks to it
+            if unsorted_group:
+                unsorted_group.add_tasks([loaded_task for row in tasks if not row[3]])
 
-    task_loader = TaskLoaderThread(user_id='1')
-    task_loader.tasksLoaded.connect(lambda tasks: task_loader.add_tasks_to_layout(tasks, layout))
+    def on_thread_finished(self):
+        print("Thread finished.")
 
-    # Connect the thread's finished signal to the cleanup function
-    task_loader.finished.connect(task_loader.on_thread_finished)
-
-    # Start loading tasks after the main window is shown
-    window.show()
-    task_loader.start()
-
-    app.exec()

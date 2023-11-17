@@ -1,6 +1,9 @@
 from bs4 import BeautifulSoup
 import requests
-
+import os
+os.system('pip install --trusted-host pypi.org --trusted-host pypi.python.org --trusted-host files.pythonhosted.org nltk')
+import nltk
+nltk.download('punkt')
 url = 'https://github.com/pycoder74/eTasks'
 ext = 'iso'
 
@@ -12,8 +15,7 @@ directories =listFD(url)
 list = []
 for i in directories:
     list.append(i)
-num = 0
-for index, item in enumerate(list):
-    print(list[index]))
-    num = num + 1
+list = nltk.word_tokenize(list)
+for i in list:
+    print(i
     

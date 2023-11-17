@@ -33,30 +33,28 @@ class TaskLoaderThread(QThread):
 
     def add_tasks_to_group(self, tasks, layout):
         unsorted_group = None  # Initialize unsorted_group variable
-        if not tasks:
-            notasklbl = QLabel("No tasks here. Create a new one by clicking + Add Task button", alignment=Qt.AlignmentFlag.AlignCenter)
-            layout.addWidget(notasklbl)
-        else:
-            for row in tasks:
-                taskname, sD, eD, task_group = row  # Unpack task details
-                group_name = task_group if task_group else 'Not Sorted'
+        new_group = None  # Initialize new_group variable outside the loop
 
-                # Check if the group has already been loaded
-                if group_name not in TaskLoaderThread.groupsLoaded:
-                    new_group = Group(name=group_name, color='#000000', parent_layout=layout)
-                    TaskLoaderThread.groupsLoaded.append(group_name)
+        for row in tasks:
+            taskname, sD, eD, task_group = row  # Unpack task details
+            group_name = 'NULL'
 
-                loaded_task = Task(taskname, startDate=sD, endDate=eD)
+            # Check if the group has already been loaded
+            if group_name not in TaskLoaderThread.groupsLoaded:
+                new_group = Group(name=group_name, color='#000000', parent_layout=layout)
+                TaskLoaderThread.groupsLoaded.append(group_name)
 
-                if group_name == 'Unsorted':
-                    unsorted_group = new_group  # Assign the 'Unsorted' group
+            loaded_task = Task(taskname, startDate=sD, endDate=eD)
 
-                if new_group and new_group is not unsorted_group:
-                    new_group.add_task(loaded_task)
+            if group_name == 'NULL':
+                unsorted_group = new_group  # Assign the 'Unsorted' group
 
-            # If there is an 'Unsorted' group, add unsorted tasks to it
-            if unsorted_group:
-                unsorted_group.add_tasks([loaded_task for row in tasks if not row[3]])
+            if new_group and new_group is not unsorted_group:
+                new_group.add_task(loaded_task)
+
+        if unsorted_group:
+            unsorted_group.add_tasks([loaded_task for row in tasks if not row[3]])
+
 
     def on_thread_finished(self):
         print("Thread finished.")

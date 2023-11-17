@@ -22,18 +22,14 @@ class Home(QMainWindow):
         self.fname = fname
         self.setWindowTitle("Home")
         self.widgets = []
-        self.no_task_label = QLabel('No Tasks Found', self)
-        self.no_task_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.no_task_label.hide()
         self.setup_ui()
         self.load_tasks()
         self.show()
-        def refresh_application(self):
-            # Reset or reload necessary data
-            self.widgets = []  # Clear the list of widgets
-            self.no_task_label.hide()  # Hide the "No Tasks Found" label
-            self.stretch_added = False  # Reset the stretch flag
-            self.load_tasks()  # Reload tasks
+    def refresh_application(self):
+# Reset or reload necessary data
+        self.widgets = []  # Clear the list of widgets
+        self.stretch_added = False  # Reset the stretch flag
+        self.load_tasks()  # Reload tasks
     
     def display_loaded_tasks(self, rows):
         for row in rows:
@@ -110,15 +106,12 @@ class Home(QMainWindow):
             self.layout.addLayout(top_action_layout)
         self.layout.addWidget(self.task_frame)
 
-        # Add the no task label to the layout
-        self.layout.addWidget(self.no_task_label)
         self.app.processEvents()
 
         print('Loading tasks...')
         self.load_tasks()
         print('tasks loaded')
 
-        # Set the main layout
         self.widget.setLayout(self.layout)
         self.setCentralWidget(self.widget)
         self.layout.addStretch(1)
@@ -183,17 +176,13 @@ QMenu::item:selected {
 
         for widget in self.widgets:
             if (text.lower() in str(widget.taskname).lower()) or \
-               (text.lower() in str(widget.startDate).lower()) or \
-               (text.lower() in str(widget.endDate).lower()):
+            (text.lower() in str(widget.startDate).lower()) or \
+            (text.lower() in str(widget.endDate).lower()):
                 widget.show()
                 any_task_visible = True
             else:
                 widget.hide()
 
-        if not any_task_visible:
-            self.no_task_label.show()
-        else:
-            self.no_task_label.hide()
 
     def showMenu(self):
         menu_position = self.addbtn.mapToGlobal(self.addbtn.rect().bottomLeft())
@@ -242,10 +231,9 @@ QMenu::item:selected {
         self.win = AddGroupWindow(self.user_id[0])
         self.win.groupAdded.connect(self.add_group_to_gui)
         self.win.show()
-        self.refresh_application()
 
     def add_group_to_gui(self, group_name, color):
-        new_group = Group(group_name, color, parent=self.task_frame)
+        new_group = Group(group_name, color, self.task_layout)
         self.layout.insertWidget(4, new_group)
 
 

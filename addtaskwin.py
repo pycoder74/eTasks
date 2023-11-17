@@ -56,7 +56,7 @@ class AddTaskWindow(QMainWindow):
         self.add_group.clicked.connect(self.addGroup)
         self.layout.addRow(self.add_group)
 
-        calendar_icon_path = r'C:\Users\ellio_6\Desktop\Coding\etasksV2-main-main\calendar_icon.jpg'
+        calendar_icon_path = 'calendar_icon.jpg'
         self.start_entry = Entry.DateTimeEntry('Start: ', calendar_icon_path)
         self.layout.addRow(self.start_entry)
 

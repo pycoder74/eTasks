@@ -1,8 +1,8 @@
 import sys
 from PyQt6.QtWidgets import QSizePolicy, QMenu, QMainWindow, QApplication, QFrame, QWidget, QVBoxLayout, QLabel, QToolButton, QLineEdit, QHBoxLayout
-from quickbarV2 import QuickBar  # Assuming this import is correct
+from quickbarV2 import QuickBar
 from PyQt6.QtCore import Qt, pyqtSignal, QTimer, QThread
-from addtaskwin import AddTaskWindow  # Assuming this import is correct
+from addtaskwin import AddTaskWindow
 from PyQt6.QtGui import QAction, QFont
 from addgroupwin import AddGroupWindow
 from task_obj import Task
@@ -25,8 +25,9 @@ class Home(QMainWindow):
         self.setup_ui()
         self.load_tasks()
         self.show()
+
     def refresh_application(self):
-# Reset or reload necessary data
+        # Reset or reload necessary data
         self.widgets = []  # Clear the list of widgets
         self.stretch_added = False  # Reset the stretch flag
         self.load_tasks()  # Reload tasks
@@ -36,10 +37,12 @@ class Home(QMainWindow):
             taskname, sD, eD, = row
             loaded_task = Task(taskname, sD, eD)
             self.widgets.append(loaded_task)
-            self.layout.addWidget(loaded_task)
+            QTimer.singleShot(0, lambda: self.layout.addWidget(loaded_task))
+
         if not self.stretch_added:
-            self.layout.addStretch(1)
+            QTimer.singleShot(0, lambda: self.layout.addStretch(1))
             self.stretch_added = True
+
         QTimer.singleShot(500, self.splashscreen.onFadeOutFinished)
 
     def setup_ui(self):
@@ -183,7 +186,6 @@ QMenu::item:selected {
             else:
                 widget.hide()
 
-
     def showMenu(self):
         menu_position = self.addbtn.mapToGlobal(self.addbtn.rect().bottomLeft())
         self.addbtn.menu().exec(menu_position)
@@ -206,16 +208,19 @@ QMenu::item:selected {
 
             if matching_group:
                 matching_group.add_task(new_task)
-                
-            
-            # If the task doesn't have a group, add it to the 'Unsorted' group
-            unsorted_group = next((group for group in self.task_frame.children() if isinstance(group, Group) and group.name == 'Unsorted'), None)
 
-            if unsorted_group:
-                unsorted_group.add_task(new_task)
-            else:
-                # Handle the case where the 'Unsorted' group doesn't exist
-                print("Error: 'Unsorted' group not found.")
+            # Print group names after adding the task
+            print("Group Names:", [group.name for group in self.task_frame.children()])
+                
+        # If the task doesn't have a group, add it to the 'Unsorted' group
+        unsorted_group = next((group for group in self.task_frame.children() if group.name in (None, 'Unsorted')), None)
+
+        if not unsorted_group:
+            unsorted_group = Group('Unsorted', '#FFFFFF', self.task_layout)
+            self.layout.insertWidget(4, unsorted_group)
+
+        if unsorted_group:
+            unsorted_group.add_task(new_task)
 
     def get_group_from_database(self, taskname):
         try:
@@ -227,6 +232,7 @@ QMenu::item:selected {
         except sqlite3.Error as e:
             print(f"Error retrieving group information: {e}")
             return None
+
     def addGroup(self):
         self.win = AddGroupWindow(self.user_id[0])
         self.win.groupAdded.connect(self.add_group_to_gui)
@@ -236,11 +242,10 @@ QMenu::item:selected {
         new_group = Group(group_name, color, self.task_layout)
         self.layout.insertWidget(4, new_group)
 
-
-
     def load_tasks(self):
-        self.task_loader = TaskLoaderThread(user_id='1')
-        self.task_loader.tasksLoaded.connect(lambda tasks: self.task_loader.add_tasks_to_group(tasks, self.task_layout))
+        self.task_loader = TaskLoaderThread(user_id=self.user_id)
+        self.task_loader.tasksLoaded.connect(lambda tasks: self.task_loader.add_tasks_to_group((Task(row[0], row[1], row[2]) for row in tasks if not row[3]), self.task_layout))
+
         # Connect the thread's finished signal to the cleanup function
         self.task_loader.finished.connect(self.task_loader.on_thread_finished)
 
@@ -251,6 +256,6 @@ if __name__ == '__main__':
     app = QApplication([])
     window = QMainWindow()
     main_win = Home('Elliott', app, window)
-    #main_win.load_tasks()  # Start loading tasks  
+    main_win.load_tasks()  # Start loading tasks  
     main_win.show()  
     app.exec()

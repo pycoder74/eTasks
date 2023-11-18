@@ -6,6 +6,7 @@ from task_obj import Task
 from PyQt6.QtCore import pyqtSignal
 from loadGT import get_topics, get_groups
 from addgroupwin import AddGroupWindow
+
 class AddTaskWindow(QMainWindow):
     taskAdded = pyqtSignal(str, str, str)
 
@@ -13,25 +14,20 @@ class AddTaskWindow(QMainWindow):
         super().__init__()
         self.fname = fname
         self.home_ref = home_ref
-        self.set_user_id()  # fetch the user_id before setting up the UI
+        self.user_id = self.set_user_id()  # fetch the user_id before setting up the UI
         self.setup_ui()
 
     def set_user_id(self):
         conn = sqlite3.connect('users.db')
         c = conn.cursor()
-        print(self.fname)
         c.execute("""SELECT id FROM users WHERE fname=?""", (self.fname,))
         result = c.fetchone()
-        if result:
-            self.user_id = result[0]
-        else:
-            self.user_id = None  # or handle the situation where there's no user_id appropriately
         conn.close()
+        return result[0] if result else None
 
     def addGroup(self):
         self.new_win = AddGroupWindow()
         self.new_win.show()
-        
 
     def setup_ui(self):
         self.setWindowTitle('Create Task')
@@ -74,43 +70,30 @@ class AddTaskWindow(QMainWindow):
     def add_task(self):
         conn = sqlite3.connect('users.db')
         c = conn.cursor()
-        if not self.taskEntry.get_value():
-            warning = MessageBox(QMessageBox.Icon.Warning, "Please enter a task name")
-            warning.exec()
-            return
-
+        
         taskN = self.taskEntry.get_value()
         pri = self.prientry.get_value()
-        topic = ','.join(self.topic_choose.get_value())
-        group = ','.join(self.group_choose.get_value())
-        if group is '':
-            group = 'NULL'
-        else:
-            pass
-        sD = self.start_entry.get_date_value()
-        eD = self.end_entry.get_date_value()
-        sT = self.start_entry.get_time_value()
-        eT = self.end_entry.get_time_value()
-
-
-
-
+        topic = ','.join(self.topic_choose.get_value()) if self.topic_choose.get_value() else None
+        group = ','.join(self.group_choose.get_value()) if self.group_choose.get_value() else None
+        sD = self.start_entry.get_date_value() or None
+        eD = self.end_entry.get_date_value() or None
+        sT = self.start_entry.get_time_value() or None
+        eT = self.end_entry.get_time_value() or None
 
         try:
             c.execute("""
             INSERT INTO tasks(
-            taskname, user, priority, topic, task_group, sD, eD, sT, eT, complete)
-                        VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?
-
-                        )""", (taskN, self.user_id, pri, topic, group, sD, eD, sT, eT, 0))
+                taskname, user, priority, topic, task_group, sD, eD, sT, eT, complete)
+            VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""", (taskN, self.user_id, pri, topic, group, sD, eD, sT, eT, 0))
             conn.commit()
             self.taskAdded.emit(taskN, sD, eD)
             print('Task saved to db')
-        except sqlite3.IntegrityError:
-            warning = MessageBox(QMessageBox.type.warning, text = 'A task already has the same name.')
+        except sqlite3.IntegrityError as e:
+            print(f"Error: {e}")
+            warning = MessageBox(QMessageBox.type.Warning, text='A task already has the same name.')
             warning.show()
         finally:
-            conn.close()  # Ensure connection is always closed
+            conn.close()
 
 if __name__ == "__main__":
     app = QApplication([])

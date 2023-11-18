@@ -6,43 +6,43 @@ class Group(QWidget):
 
     def __init__(self, name, color, parent_layout):
         super(Group, self).__init__()
-        if name not in Group.groups_loaded:
-            self.name = name  # Store the name as an instance variable
-            self.color = color
-            self.parent_layout = parent_layout
 
-            # The chevron button
-            self.toggleButton = QPushButton('v', self)
-            self.toggleButton.setFlat(True)  # Flat appearance
-            self.toggleButton.clicked.connect(self.toggleContent)
+        self.name = name  # Store the name as an instance variable
+        self.color = color
+        self.parent_layout = parent_layout
 
-            # A label for the group name
-            self.titleLabel = QLabel(name, self)
+        # The chevron button
+        self.toggleButton = QPushButton('v', self)
+        self.toggleButton.setFlat(True)  # Flat appearance
+        self.toggleButton.clicked.connect(self.toggleContent)
 
-            # Header contains the toggle button and the group title
-            headerFrame = QFrame(self)
-            headerLayout = QVBoxLayout(headerFrame)
-            headerLayout.addWidget(self.toggleButton)
-            headerLayout.addWidget(self.titleLabel)
+        # A label for the group name
+        self.titleLabel = QLabel(name, self)
 
-            # Create a colored frame to hold tasks
-            self.contentFrame = QFrame(self)
-            self.content_layout = QVBoxLayout(self.contentFrame)  # Add this line to define content_layout
+        # Header contains the toggle button and the group title
+        headerFrame = QFrame(self)
+        headerLayout = QVBoxLayout(headerFrame)
+        headerLayout.addWidget(self.toggleButton)
+        headerLayout.addWidget(self.titleLabel)
 
-            self.scrollArea = QScrollArea(self)
-            self.scrollArea.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-            self.scrollArea.setWidgetResizable(True)
-            self.scrollArea.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
+        # Create a colored frame to hold tasks
+        self.contentFrame = QFrame(self)
+        self.content_layout = QVBoxLayout(self.contentFrame)  # Add this line to define content_layout
 
-            self.scrollArea.setWidget(self.contentFrame)
-            self.scrollArea.setVisible(False)  # Initially hide the content
+        self.scrollArea = QScrollArea(self)
+        self.scrollArea.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.scrollArea.setWidgetResizable(True)
+        self.scrollArea.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
 
-            self.layout = QVBoxLayout(self)
-            self.layout.addWidget(headerFrame)
-            self.layout.addWidget(self.scrollArea)
+        self.scrollArea.setWidget(self.contentFrame)
+        self.scrollArea.setVisible(False)  # Initially hide the content
 
-            self.parent_layout.addWidget(self)
-            Group.groups_loaded.append(name)
+        self.layout = QVBoxLayout(self)
+        self.layout.addWidget(headerFrame)
+        self.layout.addWidget(self.scrollArea)
+
+        self.parent_layout.addWidget(self)
+        Group.groups_loaded.append(name)
 
     def toggleContent(self):
         if self.scrollArea.isVisible():
@@ -53,5 +53,14 @@ class Group(QWidget):
             self.toggleButton.setText('v')
 
     def add_task(self, task):
+        # Clear the existing content layout
+        self.clear_content_layout()
         # Add the task to the content_layout of the group
         self.content_layout.addWidget(task)
+
+    def clear_content_layout(self):
+        # Clear the content layout to avoid potential issues
+        while self.content_layout.count():
+            item = self.content_layout.takeAt(0)
+            if item.widget():
+                item.widget().deleteLater()

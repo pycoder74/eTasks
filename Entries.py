@@ -225,7 +225,11 @@ class Entry:
                 self.button.setText("Select Items")
 
         def get_value(self):
-            return [action.text() for action in self.button.menu().actions() if action.isChecked()]
+            if any(action.isChecked() for action in self.button.menu().actions()):
+                return [action.text() for action in self.button.menu().actions() if action.isChecked()]
+            else:
+                return None
+
     class ColorPicker(QWidget):
         def __init__(self, parent = None):
             super().__init__()

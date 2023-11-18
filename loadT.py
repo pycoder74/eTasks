@@ -7,6 +7,7 @@ from group_obj import Group
 class TaskLoaderThread(QThread):
     tasksLoaded = pyqtSignal(list)
     groupsLoaded = []  # Class-level variable to track loaded groups
+    unsorted_group_created = False  # Variable to track if 'Unsorted' group has been created
 
     def __init__(self, user_id):
         super().__init__()
@@ -31,31 +32,33 @@ class TaskLoaderThread(QThread):
         tasks = self.load_tasks(self.user_id[0])
         self.tasksLoaded.emit(tasks)
 
-    def add_tasks_to_group(self, tasks, layout):
-        unsorted_group = None  # Initialize unsorted_group variable
-        new_group = None  # Initialize new_group variable outside the loop
-
-        for row in tasks:
-            taskname, sD, eD, task_group = row  # Unpack task details
-            group_name = 'NULL'
-
-            # Check if the group has already been loaded
-            if group_name not in TaskLoaderThread.groupsLoaded:
-                new_group = Group(name=group_name, color='#000000', parent_layout=layout)
-                TaskLoaderThread.groupsLoaded.append(group_name)
-
-            loaded_task = Task(taskname, startDate=sD, endDate=eD)
-
-            if group_name == 'NULL':
-                unsorted_group = new_group  # Assign the 'Unsorted' group
-
-            if new_group and new_group is not unsorted_group:
-                new_group.add_task(loaded_task)
+    def add_tasks_to_group(self, tasks, parent_layout):
+        if not self.unsorted_group_created:
+            # If 'Unsorted' group is not found, create it
+            unsorted_group = Group('Unsorted', '#FFFFFF', parent_layout)
+            parent_layout.insertWidget(0, unsorted_group)
+            self.unsorted_group_created = True
+        else:
+            # Try to find 'Unsorted' group by name
+            unsorted_group = None
+            for group in parent_layout.children():
+                if isinstance(group, Group) and group.name == 'Unsorted':
+                    unsorted_group = group
+                    break
 
         if unsorted_group:
-            unsorted_group.add_tasks([loaded_task for row in tasks if not row[3]])
+            for loaded_task in tasks:
+                print(f"Adding task {loaded_task} to group {unsorted_group.name}")
+                unsorted_group.add_task(loaded_task)
+        else:
+            print("Error: 'Unsorted' group not found.")
+
+        print("Groups after adding tasks:")
+        for group in parent_layout.children():
+            if isinstance(group, Group):
+                print(f"Group name: {group.name}")
+                print(f"Number of tasks in {group.name}: {len(group.tasks)}")
 
 
     def on_thread_finished(self):
         print("Thread finished.")
-

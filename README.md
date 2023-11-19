@@ -4,7 +4,7 @@
 
 ## Overview
 
-eTasks is a cutting-edge task management application that combines automation and organization to enhance your productivity. This app is designed to simplify your daily routines, providing an intelligent and intuitive platform for efficient task handling.
+eTasks is a task management application that combines automation and organization to enhance your productivity. This app is designed to simplify your daily routines, providing an intelligent and intuitive platform for efficient task handling.
 
 ## Features
 

@@ -19,6 +19,11 @@ class TaskLoaderThread(QThread):
             with sqlite3.connect('users.db') as conn:
                 cursor = conn.cursor()
                 cursor.execute(
+                    """SELECT COUNT(*) FROM tasks """
+                )
+                self.num_of_tasks = int(cursor.fetchone()[0])
+                print(f"Number of tasks to load: {self.num_of_tasks}")
+                cursor.execute(
                     'SELECT taskname, sD, eD, task_group FROM tasks WHERE user = ? AND (task_group IS NULL) AND (complete IS NULL OR complete = 0)',
                     [user_id]
                 )
@@ -33,7 +38,7 @@ class TaskLoaderThread(QThread):
         self.tasksLoaded.emit(tasks)
 
     def add_tasks_to_group(self, tasks, parent_layout):
-        if not self.unsorted_group_created:
+        if not self.unsorted_group_created and self.num_of_tasks > 0:
             # If 'Unsorted' group is not found, create it
             unsorted_group = Group('Unsorted', '#FFFFFF', parent_layout)
             parent_layout.insertWidget(0, unsorted_group)
@@ -42,7 +47,7 @@ class TaskLoaderThread(QThread):
             # Try to find 'Unsorted' group by name
             unsorted_group = None
             for group in parent_layout.children():
-                if isinstance(group, Group) and group.name == 'Unsorted':
+                if isinstance(group, Group) and group.name == None:
                     unsorted_group = group
                     break
 
@@ -51,7 +56,7 @@ class TaskLoaderThread(QThread):
                 print(f"Adding task {loaded_task} to group {unsorted_group.name}")
                 unsorted_group.add_task(loaded_task)
         else:
-            print("Error: 'Unsorted' group not found.")
+            return
 
         print("Groups after adding tasks:")
         for group in parent_layout.children():

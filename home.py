@@ -34,7 +34,7 @@ class Home(QMainWindow):
     
     def display_loaded_tasks(self, rows):
         for row in rows:
-            taskname, sD, eD, = row
+            taskname, sD, eD = row  # Remove the extra comma
             loaded_task = Task(taskname, sD, eD)
             self.widgets.append(loaded_task)
             QTimer.singleShot(0, lambda: self.layout.addWidget(loaded_task))
@@ -44,6 +44,7 @@ class Home(QMainWindow):
             self.stretch_added = True
 
         QTimer.singleShot(500, self.splashscreen.onFadeOutFinished)
+
 
     def setup_ui(self):
         self.splashscreen = SplashScreen(self, span_ang=10)
@@ -212,15 +213,24 @@ QMenu::item:selected {
             # Print group names after adding the task
             print("Group Names:", [group.name for group in self.task_frame.children()])
                 
-        # If the task doesn't have a group, add it to the 'Unsorted' group
-        unsorted_group = next((group for group in self.task_frame.children() if group.name in (None, 'Unsorted')), None)
-
+        # Create 'Unsorted' group if it doesn't exist
+        unsorted_group = next((group for group in self.task_frame.children() if getattr(group, 'name', None) in (None, 'Unsorted')), None)
         if not unsorted_group:
             unsorted_group = Group('Unsorted', '#FFFFFF', self.task_layout)
             self.layout.insertWidget(4, unsorted_group)
 
         if unsorted_group:
-            unsorted_group.add_task(new_task)
+            conn = sqlite3.connect('users.db')
+            c = conn.cursor()
+            c.execute("""
+                SELECT taskname, start_date, end_date FROM tasks
+            """)
+            tasks = c.fetchall()
+            for task_data in tasks:
+                task_name, start_date, end_date = task_data
+                task = Task(task_name, start_date, end_date)
+                unsorted_group.add_task(task)
+
 
     def get_group_from_database(self, taskname):
         try:
@@ -249,13 +259,35 @@ QMenu::item:selected {
         # Connect the thread's finished signal to the cleanup function
         self.task_loader.finished.connect(self.task_loader.on_thread_finished)
 
+        # Connect a new signal to add all tasks to the 'Unsorted' group
+        self.task_loader.tasksLoaded.connect(lambda tasks: self.add_all_tasks_to_unsorted_group(tasks))
+
         # Start the thread
         self.task_loader.start()
+
+    def add_all_tasks_to_unsorted_group(self, tasks):
+        # Create 'Unsorted' group if it doesn't exist
+        unsorted_group = next((group for group in self.task_frame.children() if isinstance(group, Group) and group.name == 'Unsorted'), None)
+        if not unsorted_group:
+            unsorted_group = Group('Unsorted', '#FFFFFF', self.task_layout)
+            self.layout.insertWidget(4, unsorted_group)
+
+        # Add all tasks to the 'Unsorted' group
+        for task_data in tasks:
+            if len(task_data) == 3:
+                task_name, start_date, end_date = task_data
+            else:
+                task_name = str(task_data[0])
+                start_date = task_data[1]
+                end_date = task_data[2]
+
+            task = Task(task_name, start_date, end_date)
+            unsorted_group.add_task(task)
+
 
 if __name__ == '__main__':
     app = QApplication([])
     window = QMainWindow()
     main_win = Home('Elliott', app, window)
-    main_win.load_tasks()  # Start loading tasks  
     main_win.show()  
     app.exec()

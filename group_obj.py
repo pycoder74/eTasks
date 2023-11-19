@@ -53,9 +53,6 @@ class Group(QWidget):
             self.toggleButton.setText('v')
 
     def add_task(self, task):
-        # Clear the existing content layout
-        self.clear_content_layout()
-        # Add the task to the content_layout of the group
         self.content_layout.addWidget(task)
 
     def clear_content_layout(self):

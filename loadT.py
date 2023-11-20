@@ -14,6 +14,7 @@ class TaskLoaderThread(QThread):
         self.user_id = user_id
 
     def load_tasks(self, user_id):
+        print('load_tasks called')
         tasks = []
         try:
             with sqlite3.connect('users.db') as conn:
@@ -27,19 +28,18 @@ class TaskLoaderThread(QThread):
                     'SELECT taskname, sD, eD, task_group FROM tasks WHERE user = ? AND (task_group IS NULL) AND (complete IS NULL OR complete = 0)',
                     [user_id]
                 )
-                tasks = cursor.fetchall()
-                print(tasks)
+                self.tasks = cursor.fetchall()
+                print(self.tasks)
         except sqlite3.Error as e:
             print(f"Error loading tasks: {e}")
+        
         return tasks
-
-    def run(self):
-        tasks = self.load_tasks(self.user_id[0])
-        self.tasksLoaded.emit(tasks)
+    def emit(self):
+        self.load_tasks(self.user_id[0])
+        self.tasksLoaded.emit(self.tasks)
 
     def add_tasks_to_group(self, tasks, parent_layout):
         if not self.unsorted_group_created and self.num_of_tasks > 0:
-            # If 'Unsorted' group is not found, create it
             unsorted_group = Group('Unsorted', '#FFFFFF', parent_layout)
             parent_layout.insertWidget(0, unsorted_group)
             self.unsorted_group_created = True

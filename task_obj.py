@@ -89,7 +89,9 @@ class Task(QWidget):
         result = msgBox.exec()
 
         if result == QMessageBox.StandardButton.Ok:
-            self.hide()
+            # Close the widget before deleting
+            self.close()
+
             doublecheck = MessageBox(QMessageBox.Icon.Warning, 'Task Deleted')
             undo_btn = QPushButton("Undo")
             ok_btn = QPushButton("OK")
@@ -102,11 +104,12 @@ class Task(QWidget):
                     c = conn.cursor()
                     c.execute(""" DELETE FROM tasks WHERE taskname = ?""", (self.taskname,))
                     conn.commit()
-                    conn.close()
-            else:
+            elif result == QMessageBox.ButtonRole.RejectRole:
+                # If the user cancels, show the widget again
                 self.show()
                 cancelled = MessageBox(QMessageBox.Icon.Information, 'Cancelled')
                 cancelled.exec()
+
 
 
     def checkbox_state_changed(self, state):

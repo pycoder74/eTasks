@@ -23,7 +23,8 @@ class Home(QMainWindow):
         self.setWindowTitle("Home")
         self.widgets = []
         self.setup_ui()
-        self.load_tasks()
+        tasks = self.load_tasks()
+        self.display_loaded_tasks(tasks)
         self.show()
 
     def refresh_application(self):
@@ -33,17 +34,27 @@ class Home(QMainWindow):
         self.load_tasks()  # Reload tasks
     
     def display_loaded_tasks(self, rows):
+        # Clear existing widgets and layout
+        for widget in self.widgets:
+            widget.setParent(None)
+            widget.deleteLater()
+        self.widgets.clear()
+        self.task_layout.removeItem(self.task_layout.itemAt(i) for i in range(self.task_layout.count()))
+
+        # Add new widgets to the layout
         for row in rows:
-            taskname, sD, eD = row  # Remove the extra comma
+            taskname, sD, eD = row
             loaded_task = Task(taskname, sD, eD)
             self.widgets.append(loaded_task)
-            QTimer.singleShot(0, lambda: self.layout.addWidget(loaded_task))
+            self.task_layout.addWidget(loaded_task)
 
         if not self.stretch_added:
-            QTimer.singleShot(0, lambda: self.layout.addStretch(1))
+            self.task_layout.addStretch(1)
             self.stretch_added = True
 
         QTimer.singleShot(500, self.splashscreen.onFadeOutFinished)
+
+
 
 
     def setup_ui(self):
@@ -112,9 +123,6 @@ class Home(QMainWindow):
 
         self.app.processEvents()
 
-        print('Loading tasks...')
-        self.load_tasks()
-        print('tasks loaded')
 
         self.widget.setLayout(self.layout)
         self.setCentralWidget(self.widget)

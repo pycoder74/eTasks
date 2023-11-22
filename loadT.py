@@ -1,7 +1,5 @@
-from PyQt6.QtWidgets import QApplication, QMainWindow, QLabel, QVBoxLayout, QWidget
-from PyQt6.QtCore import Qt, QThread, pyqtSignal
+from PyQt6.QtCore import QThread, pyqtSignal
 import sqlite3
-from task_obj import Task
 from group_obj import Group
 
 class TaskLoaderThread(QThread):
@@ -12,33 +10,41 @@ class TaskLoaderThread(QThread):
     def __init__(self, user_id):
         super().__init__()
         self.user_id = user_id
+        self.num_of_tasks = 0  # Initialize num_of_tasks in the constructor
 
     def load_tasks(self, user_id):
         print('load_tasks called')
         tasks = []
         try:
             with sqlite3.connect('users.db') as conn:
+                print('Connected to the database')  # Add this line
+
                 cursor = conn.cursor()
                 cursor.execute(
                     """SELECT COUNT(*) FROM tasks """
                 )
                 self.num_of_tasks = int(cursor.fetchone()[0])
                 print(f"Number of tasks to load: {self.num_of_tasks}")
-                cursor.execute(
-                    'SELECT taskname, sD, eD, task_group FROM tasks WHERE user = ? AND (task_group IS NULL) AND (complete IS NULL OR complete = 0)',
-                    [user_id]
-                )
-                self.tasks = cursor.fetchall()
-                print(self.tasks)
+
+                query = 'SELECT taskname, sD, eD, task_group FROM tasks WHERE user = ? AND (task_group IS NULL) AND (complete IS NULL OR complete = 0)'
+                print(f"Executing query: {query}")
+                
+                cursor.execute(query, [user_id][0])
+                tasks = cursor.fetchall()
+                print(f"Fetched tasks: {tasks}")  # Print fetched tasks
         except sqlite3.Error as e:
             print(f"Error loading tasks: {e}")
-        
-        return tasks
-    def emit(self):
-        self.load_tasks(self.user_id[0])
-        self.tasksLoaded.emit(self.tasks)
 
-    def add_tasks_to_group(self, tasks, parent_layout):
+        return tasks
+
+
+
+
+    def emit(self):
+        tasks = self.load_tasks(self.user_id[0])
+        self.tasksLoaded.emit(tasks)
+
+    def add_tasks_to_layout(self, tasks, parent_layout):
         if not self.unsorted_group_created and self.num_of_tasks > 0:
             unsorted_group = Group('Unsorted', '#FFFFFF', parent_layout)
             parent_layout.insertWidget(0, unsorted_group)
@@ -47,7 +53,7 @@ class TaskLoaderThread(QThread):
             # Try to find 'Unsorted' group by name
             unsorted_group = None
             for group in parent_layout.children():
-                if isinstance(group, Group) and group.name == None:
+                if isinstance(group, Group) and group.name is None:
                     unsorted_group = group
                     break
 
@@ -63,7 +69,6 @@ class TaskLoaderThread(QThread):
             if isinstance(group, Group):
                 print(f"Group name: {group.name}")
                 print(f"Number of tasks in {group.name}: {len(group.tasks)}")
-
 
     def on_thread_finished(self):
         print("Thread finished.")

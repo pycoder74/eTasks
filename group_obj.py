@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QScrollArea, QFrame, QLabel, QSizePolicy
 from PyQt6.QtCore import Qt
-
+from task_obj import Task
 class Group(QWidget):
     groups_loaded = []
 
@@ -61,3 +61,7 @@ class Group(QWidget):
             item = self.content_layout.takeAt(0)
             if item.widget():
                 item.widget().deleteLater()
+    def add_task(self, task_name, start_date, end_date):
+            task_widget = Task(task_name, start_date, end_date)
+            self.add_task(task_widget)
+            

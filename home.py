@@ -1,4 +1,4 @@
-import sys
+
 from PyQt6.QtWidgets import QSizePolicy, QMenu, QMainWindow, QApplication, QFrame, QWidget, QVBoxLayout, QLabel, QToolButton, QLineEdit, QHBoxLayout
 from quickbarV2 import QuickBar
 from PyQt6.QtCore import Qt, pyqtSignal, QTimer, QThread
@@ -17,46 +17,16 @@ class Home(QMainWindow):
     def __init__(self, fname='', app=None, parent=None):
         super().__init__(parent)
         self.app = app
+        self.notasklabelshown = bool
         self.stretch_added = False
         self.child_wins = []
         self.fname = fname
         self.setWindowTitle("Home")
         self.widgets = []
         self.setup_ui()
-        tasks = self.load_tasks()
-        self.display_loaded_tasks(tasks)
+        self.load_tasks()
         self.show()
-
-    def refresh_application(self):
-        # Reset or reload necessary data
-        self.widgets = []  # Clear the list of widgets
-        self.stretch_added = False  # Reset the stretch flag
-        self.load_tasks()  # Reload tasks
     
-    def display_loaded_tasks(self, rows):
-        # Clear existing widgets and layout
-        for widget in self.widgets:
-            widget.setParent(None)
-            widget.deleteLater()
-        self.widgets.clear()
-        self.task_layout.removeItem(self.task_layout.itemAt(i) for i in range(self.task_layout.count()))
-
-        # Add new widgets to the layout
-        for row in rows:
-            taskname, sD, eD = row
-            loaded_task = Task(taskname, sD, eD)
-            self.widgets.append(loaded_task)
-            self.task_layout.addWidget(loaded_task)
-
-        if not self.stretch_added:
-            self.task_layout.addStretch(1)
-            self.stretch_added = True
-
-        QTimer.singleShot(500, self.splashscreen.onFadeOutFinished)
-
-
-
-
     def setup_ui(self):
         self.splashscreen = SplashScreen(self, span_ang=10)
         self.loadingProgress.connect(self.splashscreen.updateLoadingProgress)
@@ -206,6 +176,9 @@ QMenu::item:selected {
 
     def add_task_to_gui(self, task_name, start_date, end_date):
         new_task = Task(task_name, start_date, end_date)
+        if self.notasklabelshown is True:
+            self.notasklabel.destroy()
+            self.notasklabelshown = False
 
         # Retrieve the group information from the database
         group_name = self.get_group_from_database(new_task.taskname)
@@ -231,13 +204,13 @@ QMenu::item:selected {
             conn = sqlite3.connect('users.db')
             c = conn.cursor()
             c.execute("""
-                SELECT taskname, start_date, end_date FROM tasks
+                SELECT taskname, sD, eD FROM tasks
             """)
             tasks = c.fetchall()
             for task_data in tasks:
                 task_name, start_date, end_date = task_data
                 task = Task(task_name, start_date, end_date)
-                unsorted_group.add_task(task)
+                self.task_layout.addWidget(task)
 
 
     def get_group_from_database(self, taskname):
@@ -261,9 +234,13 @@ QMenu::item:selected {
         self.layout.insertWidget(4, new_group)
 
     def load_tasks(self):
+        print("Starting task loader thread at home.py")
         self.task_loader = TaskLoaderThread(user_id=self.user_id)
-        self.task_loader.tasksLoaded.connect(lambda tasks: self.task_loader.add_tasks_to_group((Task(row[0], row[1], row[2]) for row in tasks if not row[3]), self.task_layout))
-
+        loaded_tasks = self.task_loader.load_tasks(self.user_id)
+        for i in loaded_tasks:
+            print(f"\n{i} in home.py")
+            nTask = Task(i[0], i[1], i[2], i[3])
+            self.task_layout.addWidget(nTask)
         # Connect the thread's finished signal to the cleanup function
         self.task_loader.finished.connect(self.task_loader.on_thread_finished)
 
@@ -272,6 +249,7 @@ QMenu::item:selected {
 
         # Start the thread
         self.task_loader.start()
+
 
     def add_all_tasks_to_unsorted_group(self, tasks):
         # Create 'Unsorted' group if it doesn't exist

@@ -237,18 +237,28 @@ QMenu::item:selected {
         print("Starting task loader thread at home.py")
         self.task_loader = TaskLoaderThread(user_id=self.user_id)
         loaded_tasks = self.task_loader.load_tasks(self.user_id)
-        for i in loaded_tasks:
-            print(f"\n{i} in home.py")
-            nTask = Task(i[0], i[1], i[2], i[3])
-            self.task_layout.addWidget(nTask)
-        # Connect the thread's finished signal to the cleanup function
-        self.task_loader.finished.connect(self.task_loader.on_thread_finished)
+        print(loaded_tasks)
+        if len(loaded_tasks) > 0:
+            for i in loaded_tasks:
+                print(f"\n{i} in home.py")
+                nTask = Task(i[0], i[1], i[2], i[3])
+                self.task_layout.addWidget(nTask)
+            # Connect the thread's finished signal to the cleanup function
+            self.task_loader.finished.connect(self.task_loader.on_thread_finished)
 
-        # Connect a new signal to add all tasks to the 'Unsorted' group
-        self.task_loader.tasksLoaded.connect(lambda tasks: self.add_all_tasks_to_unsorted_group(tasks))
+            # Connect a new signal to add all tasks to the 'Unsorted' group
+            self.task_loader.tasksLoaded.connect(lambda tasks: self.add_all_tasks_to_unsorted_group(tasks))
 
-        # Start the thread
-        self.task_loader.start()
+            # Start the thread
+            self.task_loader.start()
+        else:
+            print('No tasks found')
+            self.notasklabel = QLabel('No tasks found')
+            self.notasklabel.setStyleSheet(
+                """font-weight: bold;"""
+)
+            
+            self.task_layout.addWidget(self.notasklabel)
 
 
     def add_all_tasks_to_unsorted_group(self, tasks):

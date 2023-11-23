@@ -12,12 +12,13 @@ class TaskLoaderThread(QThread):
         self.user_id = user_id
         self.num_of_tasks = 0  # Initialize num_of_tasks in the constructor
 
-    def load_tasks(self, user_id):
-        print('load_tasks called')
+    def load_tasks(self, user_id, load_complete : bool):
+        self.load_complete = load_complete
         tasks = []
         try:
             with sqlite3.connect('users.db') as conn:
                 print('Connected to the database')  # Add this line
+
 
                 cursor = conn.cursor()
                 cursor.execute(
@@ -25,8 +26,10 @@ class TaskLoaderThread(QThread):
                 )
                 self.num_of_tasks = int(cursor.fetchone()[0])
                 print(f"Number of tasks to load: {self.num_of_tasks}")
-
-                query = 'SELECT taskname, sD, eD, task_group FROM tasks WHERE user = ? AND (task_group IS NULL) AND (complete IS NULL OR complete = 0)'
+                if not load_complete:
+                    query = 'SELECT taskname, sD, eD, task_group FROM tasks WHERE user = ? AND (task_group IS NULL) AND (complete IS NULL OR complete = 0)'
+                else:
+                    query = 'SELECT taskname, sD, eD, task_group FROM tasks WHERE user = ? AND (task_group IS NULL) AND (complete = 1)'
                 print(f"Executing query: {query}")
                 
                 cursor.execute(query, [user_id][0])
@@ -37,17 +40,14 @@ class TaskLoaderThread(QThread):
 
         return tasks
 
-
-
-
-    def emit(self):
-        tasks = self.load_tasks(self.user_id[0])
+    def emit(self, load_complete = bool):
+        tasks = self.load_tasks(self.user_id[0], load_complete = load_complete)
         self.tasksLoaded.emit(tasks)
 
     def add_tasks_to_layout(self, tasks, parent_layout):
         if not self.unsorted_group_created and self.num_of_tasks > 0:
             unsorted_group = Group('Unsorted', '#FFFFFF', parent_layout)
-            parent_layout.insertWidget(0, unsorted_group)
+            parent_layout.addWidget(unsorted_group)
             self.unsorted_group_created = True
         else:
             # Try to find 'Unsorted' group by name

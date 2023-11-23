@@ -24,7 +24,10 @@ class Home(QMainWindow):
         self.setWindowTitle("Home")
         self.widgets = []
         self.setup_ui()
-        self.load_tasks()
+        print('Loading incomplete tasks...')
+        self.load_tasks(load_complete=False)
+        print('Loading completed tasks...')
+        self.load_tasks(load_complete=True)
         self.show()
     
     def setup_ui(self):
@@ -39,7 +42,6 @@ class Home(QMainWindow):
         self.app.processEvents()
         self.splashscreen.show()
         self.loadingProgress.emit(40)
-
         self.widget = QWidget()
         self.layout = QVBoxLayout()
 
@@ -52,7 +54,7 @@ class Home(QMainWindow):
         self.task_frame.setObjectName('task_frame')
         self.task_frame.setStyleSheet(
             """#task_frame{
-            border: 2px solid #00008B
+            border: 2px solid #000000
             }"""
         )
         self.task_layout = QVBoxLayout()
@@ -233,16 +235,23 @@ QMenu::item:selected {
         new_group = Group(group_name, color, self.task_layout)
         self.layout.insertWidget(4, new_group)
 
-    def load_tasks(self):
+    def load_tasks(self, load_complete: bool):
         print("Starting task loader thread at home.py")
         self.task_loader = TaskLoaderThread(user_id=self.user_id)
-        loaded_tasks = self.task_loader.load_tasks(self.user_id)
+        loaded_tasks = self.task_loader.load_tasks(self.user_id, load_complete=load_complete)
         print(loaded_tasks)
+
+        # Create a group based on completion status
+        group_name = 'Completed' if load_complete else 'Not Completed'
+        group_color = '#00FF00' if load_complete else '#FF0000'
+        status_group = Group(name=group_name, color=group_color, parent_layout=self.task_layout)
+
         if len(loaded_tasks) > 0:
             for i in loaded_tasks:
                 print(f"\n{i} in home.py")
                 nTask = Task(i[0], i[1], i[2], i[3])
-                self.task_layout.addWidget(nTask)
+                status_group.add_task(task_name=nTask.taskname, start_date=nTask.startDate, end_date=nTask.endDate)
+
             # Connect the thread's finished signal to the cleanup function
             self.task_loader.finished.connect(self.task_loader.on_thread_finished)
 
@@ -251,34 +260,15 @@ QMenu::item:selected {
 
             # Start the thread
             self.task_loader.start()
+
         else:
-            print('No tasks found')
-            self.notasklabel = QLabel('No tasks found')
+            text = f'No {"completed" if load_complete else "incomplete"} tasks found'
+            self.notasklabel = QLabel(text)
             self.notasklabel.setStyleSheet(
                 """font-weight: bold;"""
-)
-            
-            self.task_layout.addWidget(self.notasklabel)
+            )
 
-
-    def add_all_tasks_to_unsorted_group(self, tasks):
-        # Create 'Unsorted' group if it doesn't exist
-        unsorted_group = next((group for group in self.task_frame.children() if isinstance(group, Group) and group.name == 'Unsorted'), None)
-        if not unsorted_group:
-            unsorted_group = Group('Unsorted', '#FFFFFF', self.task_layout)
-            self.layout.insertWidget(4, unsorted_group)
-
-        # Add all tasks to the 'Unsorted' group
-        for task_data in tasks:
-            if len(task_data) == 3:
-                task_name, start_date, end_date = task_data
-            else:
-                task_name = str(task_data[0])
-                start_date = task_data[1]
-                end_date = task_data[2]
-
-            task = Task(task_name, start_date, end_date)
-            unsorted_group.add_task(task)
+            status_group.add_task_to_group(self.notasklabel)
 
 
 if __name__ == '__main__':

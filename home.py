@@ -1,7 +1,6 @@
-
 from PyQt6.QtWidgets import QSizePolicy, QMenu, QMainWindow, QApplication, QFrame, QWidget, QVBoxLayout, QLabel, QToolButton, QLineEdit, QHBoxLayout
 from quickbarV2 import QuickBar
-from PyQt6.QtCore import Qt, pyqtSignal, QTimer, QThread
+from PyQt6.QtCore import Qt, pyqtSignal
 from addtaskwin import AddTaskWindow
 from PyQt6.QtGui import QAction, QFont
 from addgroupwin import AddGroupWindow
@@ -11,9 +10,10 @@ from group_obj import Group
 from splashscreen import SplashScreen
 from loadT import TaskLoaderThread
 
+
 class Home(QMainWindow):
     loadingProgress = pyqtSignal(int)
-    
+
     def __init__(self, fname='', app=None, parent=None):
         super().__init__(parent)
         self.app = app
@@ -23,13 +23,14 @@ class Home(QMainWindow):
         self.fname = fname
         self.setWindowTitle("Home")
         self.widgets = []
+        self.unsorted_group = None  # Added instance variable for 'Unsorted' group
         self.setup_ui()
         print('Loading incomplete tasks...')
         self.load_tasks(load_complete=False)
         print('Loading completed tasks...')
         self.load_tasks(load_complete=True)
         self.show()
-    
+
     def setup_ui(self):
         self.splashscreen = SplashScreen(self, span_ang=10)
         self.loadingProgress.connect(self.splashscreen.updateLoadingProgress)
@@ -95,7 +96,6 @@ class Home(QMainWindow):
 
         self.app.processEvents()
 
-
         self.widget.setLayout(self.layout)
         self.setCentralWidget(self.widget)
         self.layout.addStretch(1)
@@ -160,8 +160,8 @@ QMenu::item:selected {
 
         for widget in self.widgets:
             if (text.lower() in str(widget.taskname).lower()) or \
-            (text.lower() in str(widget.startDate).lower()) or \
-            (text.lower() in str(widget.endDate).lower()):
+                    (text.lower() in str(widget.startDate).lower()) or \
+                    (text.lower() in str(widget.endDate).lower()):
                 widget.show()
                 any_task_visible = True
             else:
@@ -177,7 +177,7 @@ QMenu::item:selected {
         self.win.show()
 
     def add_task_to_gui(self, task_name, start_date, end_date):
-        new_task = Task(task_name, start_date, end_date)
+        new_task = Task(task_name, start_date, end_date, complete=False)
         if self.notasklabelshown is True:
             self.notasklabel.destroy()
             self.notasklabelshown = False
@@ -195,25 +195,12 @@ QMenu::item:selected {
 
             # Print group names after adding the task
             print("Group Names:", [group.name for group in self.task_frame.children()])
-                
-        # Create 'Unsorted' group if it doesn't exist
-        unsorted_group = next((group for group in self.task_frame.children() if getattr(group, 'name', None) in (None, 'Unsorted')), None)
-        if not unsorted_group:
-            unsorted_group = Group('Unsorted', '#FFFFFF', self.task_layout)
-            self.layout.insertWidget(4, unsorted_group)
 
-        if unsorted_group:
-            conn = sqlite3.connect('users.db')
-            c = conn.cursor()
-            c.execute("""
-                SELECT taskname, sD, eD FROM tasks
-            """)
-            tasks = c.fetchall()
-            for task_data in tasks:
-                task_name, start_date, end_date = task_data
-                task = Task(task_name, start_date, end_date)
-                self.task_layout.addWidget(task)
+        # Add the task to the 'Unsorted' group if no specific group is found
+        else:
+            self.unsorted_group.add_task(new_task)
 
+        # ... (other code)
 
     def get_group_from_database(self, taskname):
         try:
@@ -232,25 +219,34 @@ QMenu::item:selected {
         self.win.show()
 
     def add_group_to_gui(self, group_name, color):
-        new_group = Group(group_name, color, self.task_layout)
-        self.layout.insertWidget(4, new_group)
+        # Check if the group already exists
+        existing_group = next((group for group in self.task_frame.children() if isinstance(group, Group) and group.name == group_name), None)
+
+        if existing_group:
+            print(f"Group '{group_name}' already exists.")
+        else:
+            new_group = Group(group_name, color, self.task_layout)
+            self.layout.insertWidget(4, new_group)
 
     def load_tasks(self, load_complete: bool):
         print("Starting task loader thread at home.py")
-        self.task_loader = TaskLoaderThread(user_id=self.user_id)
-        loaded_tasks = self.task_loader.load_tasks(self.user_id, load_complete=load_complete)
-        print(loaded_tasks)
-
+        self.task_loader = TaskLoaderThread(self.user_id, load_complete, parent_layout=self.task_layout)
+        self.task_loader.run_task_thread()
         # Create a group based on completion status
         group_name = 'Completed' if load_complete else 'Not Completed'
         group_color = '#00FF00' if load_complete else '#FF0000'
-        status_group = Group(name=group_name, color=group_color, parent_layout=self.task_layout)
+        self.status_group = Group(name=group_name, color=group_color, parent_layout=self.task_layout)
 
-        if len(loaded_tasks) > 0:
-            for i in loaded_tasks:
+        if self.task_loader.num_of_tasks > 0:
+            for i in self.task_loader.tasks:
                 print(f"\n{i} in home.py")
                 nTask = Task(i[0], i[1], i[2], i[3])
-                status_group.add_task(task_name=nTask.taskname, start_date=nTask.startDate, end_date=nTask.endDate)
+                if load_complete:
+                    self.status_group.add_task(task_name=nTask.taskname, start_date=nTask.startDate,
+                                               end_date=nTask.endDate, complete=True)
+                else:
+                    self.status_group.add_task(task_name=nTask.taskname, start_date=nTask.startDate,
+                                               end_date=nTask.endDate, complete=False)
 
             # Connect the thread's finished signal to the cleanup function
             self.task_loader.finished.connect(self.task_loader.on_thread_finished)
@@ -259,7 +255,7 @@ QMenu::item:selected {
             self.task_loader.tasksLoaded.connect(lambda tasks: self.add_all_tasks_to_unsorted_group(tasks))
 
             # Start the thread
-            self.task_loader.start()
+            self.task_loader.run_task_thread()
 
         else:
             text = f'No {"completed" if load_complete else "incomplete"} tasks found'
@@ -268,12 +264,12 @@ QMenu::item:selected {
                 """font-weight: bold;"""
             )
 
-            status_group.add_task_to_group(self.notasklabel)
+            self.status_group.add_task_to_group(self.notasklabel)
 
 
 if __name__ == '__main__':
     app = QApplication([])
     window = QMainWindow()
     main_win = Home('Elliott', app, window)
-    main_win.show()  
+    main_win.show()
     app.exec()

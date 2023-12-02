@@ -9,13 +9,14 @@ import sqlite3
 from etasksMessageBox import MessageBox
 
 class Task(QWidget):
-    def __init__(self, taskname, startDate, endDate, parent=None):
+    def __init__(self, taskname, startDate, endDate, complete : bool, parent=None):
         super(Task, self).__init__(parent)
 
         self.taskname = taskname
         self.startDate = startDate
         self.endDate = endDate
         self.parent = parent
+        self.complete = complete
 
         mainLayout = QVBoxLayout(self)
         mainLayout.setSpacing(5)
@@ -34,6 +35,10 @@ class Task(QWidget):
         mainframeLayout = QHBoxLayout(mainframe)
 
         self.checkBox = QCheckBox(self)
+        if complete:
+            self.checkBox.setChecked(True)
+        else:
+            pass
         mainframeLayout.addWidget(self.checkBox)
         self.checkBox.stateChanged.connect(self.checkbox_state_changed)
 
@@ -104,11 +109,10 @@ class Task(QWidget):
     def checkbox_state_changed(self, state):
         if state == Qt.CheckState.Unchecked:
             print(f"Checkbox for task '{self.taskname}' is unchecked")
+            self.complete = False
         else:
             print(f"Checkbox for task '{self.taskname}' is checked")
-            timer = QTimer(self)
-            timer.timeout.connect(self.complete)
-            timer.start(500)
+            self.complete = True
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

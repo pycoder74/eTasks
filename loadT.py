@@ -28,9 +28,9 @@ class TaskLoaderThread(QThread):
                 self.num_of_tasks = int(cursor.fetchone()[0])
                 print(f"Number of tasks to load: {self.num_of_tasks}")
                 if not load_complete:
-                    query = 'SELECT taskname, sD, eD, task_group FROM tasks WHERE user = ? AND (task_group IS NULL) AND (complete IS NULL OR complete = 0)'
+                    query = 'SELECT taskname, sD, eD, task_group FROM tasks WHERE user = ? AND (complete = 0)'
                 else:
-                    query = 'SELECT taskname, sD, eD, task_group FROM tasks WHERE user = ? AND (task_group IS NULL) AND (complete = 1)'
+                    query = 'SELECT taskname, sD, eD, task_group FROM tasks WHERE user = ? AND (complete = 1)'
                 print(f"Executing query: {query}")
 
                 cursor.execute(query, [user_id][0])
@@ -48,6 +48,7 @@ class TaskLoaderThread(QThread):
     def add_tasks_to_layout(self, tasks, parent_layout):
         for i in tasks:
             nTask = Task(i[0], i[1], i[2], complete = False, parent = parent_layout)
+        
 
     def run_task_thread(self):
         tasks = self.load_tasks(self.user_id, self.load_complete)

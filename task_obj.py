@@ -4,13 +4,14 @@ from PyQt6.QtWidgets import (
     QFrame, QWidget, QVBoxLayout, QLabel, QCheckBox,
     QHBoxLayout, QPushButton
 )
-from PyQt6.QtCore import Qt, QTimer
+from PyQt6.QtCore import Qt, pyqtSignal
 import sqlite3
 from etasksMessageBox import MessageBox
 
 class Task(QWidget):
-    def __init__(self, taskname, startDate, endDate, complete : bool, parent=None):
-        super(Task, self).__init__(parent)
+    taskCompleted = pyqtSignal()
+    def __init__(self, taskname, startDate, endDate, complete: bool, parent=None):
+        super(Task, self).__init__()
 
         self.taskname = taskname
         self.startDate = startDate
@@ -37,11 +38,8 @@ class Task(QWidget):
         self.checkBox = QCheckBox(self)
         if complete:
             self.checkBox.setChecked(True)
-        else:
-            pass
         mainframeLayout.addWidget(self.checkBox)
         self.checkBox.stateChanged.connect(self.checkbox_state_changed)
-
         self.bin_icon = QPushButton(text='Delete')
         self.bin_icon.clicked.connect(self.delete)
         mainframeLayout.addWidget(self.bin_icon)
@@ -71,27 +69,29 @@ class Task(QWidget):
 
         self.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
 
-    def complete(self):
-        if not hasattr(self, 'completed') or not self.completed:
-            self.hide()
-            self.completed = True
-
+    def complete_task(self):
+        print('Running complete task func at task_obj.py')
+        try:
             with sqlite3.connect('users.db') as conn:
                 c = conn.cursor()
                 c.execute("UPDATE tasks SET complete = TRUE WHERE taskname = ?", (self.taskname,))
                 conn.commit()
-
+        except sqlite3.Error as e:
+            print(f"Error updating task status: {e}")
+        else:
+            self.completed = True
             completion = MessageBox(QMessageBox.Icon.Information, text="Task Complete")
             completion.exec()
+            self.taskCompleted.emit()
 
     def delete(self):
         result = QMessageBox.question(
-            self, 'Delete Task', 'Are you sure you want to delete this task?',
-            QMessageBox.ButtonRole.AcceptRole | QMessageBox.ButtonRole.RejectRole
-        )
+    self, 'Delete Task', 'Are you sure you want to delete this task?',
+    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+)
 
-        if result == QMessageBox.ButtonRole.AcceptRole:
-            self.close()
+
+        if result == QMessageBox.StandardButton.Yes:
 
             doublecheck = MessageBox(QMessageBox.Icon.Warning, 'Task Deleted')
             undo_btn = QPushButton("Undo")
@@ -100,11 +100,14 @@ class Task(QWidget):
             doublecheck.addButton(ok_btn, QMessageBox.ButtonRole.AcceptRole)
             result = doublecheck.exec()
 
-            if result == QMessageBox.ButtonRole.RejectRole:
-                with sqlite3.connect('users.db') as conn:
-                    c = conn.cursor()
-                    c.execute("DELETE FROM tasks WHERE taskname = ?", (self.taskname,))
-                    conn.commit()
+            if result == QMessageBox.StandardButton.No:
+                try:
+                    with sqlite3.connect('users.db') as conn:
+                        c = conn.cursor()
+                        c.execute("DELETE FROM tasks WHERE taskname = ?", (self.taskname,))
+                        conn.commit()
+                except sqlite3.Error as e:
+                    print(f"Error deleting task: {e}")
 
     def checkbox_state_changed(self, state):
         if state == Qt.CheckState.Unchecked:
@@ -113,6 +116,8 @@ class Task(QWidget):
         else:
             print(f"Checkbox for task '{self.taskname}' is checked")
             self.complete = True
+            print('Self.complete_task called at task_obj.py')
+            self.complete_task()
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

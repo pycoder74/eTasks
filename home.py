@@ -38,8 +38,6 @@ class Home(QMainWindow):
         screen_size = self.app.primaryScreen().size()
         x = (screen_size.width() - self.splashscreen.width()) // 2
         y = (screen_size.height() - self.splashscreen.height()) // 2
-
-        self.splashscreen.move(x, y)
         self.app.processEvents()
         self.splashscreen.show()
         self.loadingProgress.emit(40)
@@ -178,6 +176,7 @@ QMenu::item:selected {
 
     def add_task_to_gui(self, task_name, start_date, end_date):
         new_task = Task(task_name, start_date, end_date, complete=False)
+        new_task.taskCompleted.connect(self.reload_contents)
         if self.notasklabelshown is True:
             self.notasklabel.destroy()
             self.notasklabelshown = False
@@ -265,6 +264,20 @@ QMenu::item:selected {
             )
 
             self.status_group.add_task_to_group(self.notasklabel)
+    def reload_contents(self):
+        # Clear existing tasks and layout
+        for widget in self.widgets:
+            widget.setParent(None)
+            widget.deleteLater()
+
+        # Reload incomplete tasks
+        print('Reloading incomplete tasks...')
+        self.load_tasks(load_complete=False)
+
+        # Reload completed tasks
+        print('Reloading completed tasks...')
+        self.load_tasks(load_complete=True)
+        
 
 
 if __name__ == '__main__':

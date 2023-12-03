@@ -1,0 +1,114 @@
+1. **home.py:**
+   - C0412: Imports from package PyQt6 are not grouped (ungrouped-imports)
+   - W0611: Unused import sys (unused-import)
+   - W0611: Unused QSizePolicy imported from PyQt6.QtWidgets (unused-import)
+   - W0611: Unused QThread imported from PyQt6.QtCore (unused-import)
+
+2. **imagebuttontry.py:**
+   - C0114: Missing module docstring (missing-module-docstring)
+   - E0401: Unable to import 'PyQt6.QtWidgets' (import-error)
+   - E0401: Unable to import 'PyQt6.QtGui' (import-error)
+   - E0611: No name 'QuickBarFrame' in module 'quickbarframe' (no-name-in-module)
+   - C0411: Standard import "import sys" should be placed before "from PyQt6.QtWidgets import QMainWindow, QApplication, QWidget, QLabel, QHBoxLayout, QVBoxLayout" (wrong-import-order)
+   - C0411: Standard import "import asyncio" should be placed before "from PyQt6.QtWidgets import QMainWindow, QApplication, QWidget, QLabel, QHBoxLayout, QVBoxLayout" (wrong-import-order)
+   - W0611: Unused QWidget imported from PyQt6.QtWidgets (unused-import)
+   - W0611: Unused QLabel imported from PyQt6.QtWidgets (unused-import)
+   - W0611: Unused QHBoxLayout imported from PyQt6.QtWidgets (unused-import)
+   - W0611: Unused QVBoxLayout imported from PyQt6.QtWidgets (unused-import)
+   - W0611: Unused QIcon imported from PyQt6.QtGui (unused-import)
+   - W0611: Unused QuickBarFrame imported from quickbarframe (unused-import)
+   - W0611: Unused get_month imported from get_current_date (unused-import)
+   - W0611: Unused get_cdaymnth imported from get_current_date (unused-import)
+   - W0611: Unused get_cday imported from get_current_date (unused-import)
+   - W0611: Unused update_time imported from get_current_date (unused-import)
+   - W0611: Unused get_weather imported from getweather (unused-import)
+   - W0611: Unused import asyncio (unused-import)
+
+3. **info_entry.py:**
+   - C0114: Missing module docstring (missing-module-docstring)
+   - E0401: Unable to import 'PyQt6.QtWidgets' (import-error)
+   - C0115: Missing class docstring (missing-class-docstring)
+   - R0903: Too few public methods (0/2) (too-few-public-methods)
+
+4. **installer.py:**
+   - C0301: Line too long (138/100) (line-too-long)
+   - C0114: Missing module docstring (missing-module-docstring)
+   - C0116: Missing function or method docstring (missing-function-docstring)
+   - W0621: Redefining name 'install' from outer scope (line 2) (redefined-outer-name)
+   - W1514: Using open without explicitly specifying an encoding (unspecified-encoding)
+
+5. **loadG.py:**
+   - C0303: Trailing whitespace (trailing-whitespace)
+   - C0301: Line too long (103/100) (line-too-long)
+   - C0114: Missing module docstring (missing-module-docstring)
+   - C0103: Module name "loadG" doesn't conform to snake_case naming style (invalid-name)
+   - E0401: Unable to import 'PyQt6.QtWidgets' (import-error)
+   - E0401: Unable to import 'PyQt6.QtCore' (import-error)
+   - C0116: Missing function or method docstring (missing-function-docstring)
+   - C0103: Function name "loadG" doesn't conform to snake_case naming style (invalid-name)
+   - W0613: Unused argument 'parent' (unused-argument)
+   - W0612: Unused variable 'group' (unused-variable)
+   - C0411: Standard import "import sqlite3" should be placed before "from PyQt6.QtWidgets import QApplication, QMainWindow, QLabel, QVBoxLayout, QWidget" (wrong-import-order)
+   - W0611: Unused QLabel imported from PyQt6.QtWidgets (unused-import)
+   - W0611: Unused QVBoxLayout imported from PyQt6.QtWidgets (unused-import)
+   - W0611: Unused QWidget imported from PyQt6.QtWidgets (unused-import)
+   - W0611: Unused Qt imported from PyQt6.QtCore (unused-import)
+   - W0611: Unused Task imported from task_obj (unused-import)
+   - W0611: Unused Group imported from group_obj (unused-import)
+
+6. **loadGT.py:**
+   - C0303: Trailing whitespace (trailing-whitespace)
+   - C0301: Line too long (112/100) (line-too-long)
+   - C0303: Trailing whitespace (trailing-whitespace)
+   - C0114: Missing module docstring (missing-module-docstring)
+   - C0103: Module name "loadGT" doesn't conform to snake_case naming style (invalid-name)
+   - C0116: Missing function or method docstring (missing-function-docstring)
+   - W0621: Redefining name 'topics' from outer scope (line 35) (redefined-outer-name)
+   - C0116: Missing function or method docstring (missing-function-docstring)
+   - W0621: Redefining name 'groups' from outer scope (line 36) (redefined-outer-name)
+   - C0116: Missing function or method docstring (missing-function-docstring)
+   - W0621: Redefining name 'tasks' from outer scope (line 37) (redefined-outer-name)
+   - W0612: Unused variable 'tasks_num' (unused-variable)
+
+7. **loadT.py:**
+   - C0301: Line too long (148/100) (line-too-long)
+   - C0114: Missing module docstring (missing-module-docstring)
+   - C0103: Module name "loadT" doesn't conform to snake_case naming style (invalid-name)
+   - E0401: Unable to import 'PyQt6.QtWidgets' (import-error)
+   - E0401: Unable to import 'PyQt6.QtCore' (import-error)
+   - C0115: Missing class docstring (missing-class-docstring)
+   - C0116: Missing function or method docstring (missing-function-docstring)
+   - C0116: Missing function or method docstring (missing-function-docstring)
+   - C0116: Missing function or method docstring (missing-function-docstring)
+   - C0116: Missing function or method docstring (missing-function-docstring)
+   - C0411: Standard import "import sqlite3" should be placed before "from PyQt6.QtWidgets import QApplication, QMainWindow, QLabel, QVBoxLayout, QWidget" (wrong-import-order)
+   - W0611: Unused QApplication imported from PyQt6.QtWidgets (unused-import)
+   - W0611: Unused QMainWindow imported from PyQt6.QtWidgets (unused-import)
+   - W0611: Unused QLabel imported from
+
+ PyQt6.QtWidgets (unused-import)
+   - W0611: Unused QVBoxLayout imported from PyQt6.QtWidgets (unused-import)
+   - W0611: Unused QWidget imported from PyQt6.QtWidgets (unused-import)
+   - W0611: Unused Qt imported from PyQt6.QtCore (unused-import)
+   - W0611: Unused Task imported from task_obj (unused-import)
+
+8. **main.py:**
+   - C0305: Trailing newlines (trailing-newlines)
+   - C0114: Missing module docstring (missing-module-docstring)
+   - E0401: Unable to import 'PyQt6.QtWidgets' (import-error)
+   - C0411: Third-party import "from PyQt6.QtWidgets import QApplication" should be placed before "from Register import RegisterWindow" (wrong-import-order)
+
+9. **newwin.py:**
+   - C0114: Missing module docstring (missing-module-docstring)
+   - E0401: Unable to import 'PyQt6.QtWidgets' (import-error)
+   - R0903: Too few public methods (0/2) (too-few-public-methods)
+   - C0115: Missing class docstring (missing-class-docstring)
+   - C0116: Missing function or method docstring (missing-function-docstring)
+   - W0613: Unused argument 'checked' (unused-argument)
+   - R0903: Too few public methods (1/2) (too-few-public-methods)
+   - C0411: Standard import "import sys" should be placed before "from PyQt6.QtWidgets import QApplication, QMainWindow, QPushButton, QLabel, QVBoxLayout, QWidget" (wrong-import-order)
+
+10. **open_home.py:**
+    - C0114: Missing module docstring (missing-module-docstring)
+
+Feel free to let me know if there's anything specific you'd like to address!

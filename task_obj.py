@@ -71,18 +71,21 @@ class Task(QWidget):
 
     def complete_task(self):
         print('Running complete task func at task_obj.py')
-        try:
-            with sqlite3.connect('users.db') as conn:
-                c = conn.cursor()
-                c.execute("UPDATE tasks SET complete = TRUE WHERE taskname = ?", (self.taskname,))
-                conn.commit()
-        except sqlite3.Error as e:
-            print(f"Error updating task status: {e}")
-        else:
-            self.completed = True
-            completion = MessageBox(QMessageBox.Icon.Information, text="Task Complete")
-            completion.exec()
-            self.taskCompleted.emit()
+        with sqlite3.connect('users.db') as conn:
+            c = conn.cursor()
+            c.execute("UPDATE tasks SET complete = TRUE WHERE taskname = ?", (self.taskname,))
+        self.completed = True
+        completion = MessageBox(QMessageBox.Icon.Information, text="Task Complete")
+        completion.exec()
+        self.taskCompleted.emit()
+    def incomplete_task(self):
+        print('Running incomplete task func at task_obj.py')
+        with sqlite3.connect('users.db') as conn:
+            c = conn.cursor()
+            c.execute("UPDATE tasks SET complete = FALSE WHERE taskname = ?", (self.taskname,))
+        self.completed = False
+        incompletion = MessageBox(QMessageBox.Icon.Information, text="Task Marked as Incomplete")
+        incompletion.exec()
 
     def delete(self):
         result = QMessageBox.question(
@@ -110,10 +113,12 @@ class Task(QWidget):
                     print(f"Error deleting task: {e}")
 
     def checkbox_state_changed(self, state):
-        if state == Qt.CheckState.Unchecked:
+        print(state)
+        if state == 0:
             print(f"Checkbox for task '{self.taskname}' is unchecked")
             self.complete = False
-        else:
+            self.incomplete_task()
+        elif state == 2:
             print(f"Checkbox for task '{self.taskname}' is checked")
             self.complete = True
             print('Self.complete_task called at task_obj.py')

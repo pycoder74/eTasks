@@ -13,7 +13,6 @@ class TaskLoaderThread(QThread):
         self.num_of_tasks = 0  # Initialize num_of_tasks in the constructor
         self.load_complete = load_complete
         self.parent_layout = parent_layout  # Added parent_layout as an instance variable
-
     def load_tasks(self, user_id, load_complete):
         self.load_complete = load_complete
         tasks = []
@@ -27,7 +26,7 @@ class TaskLoaderThread(QThread):
                 )
                 self.num_of_tasks = int(cursor.fetchone()[0])
                 print(f"Number of tasks to load: {self.num_of_tasks}")
-                if not load_complete:
+                if not self.load_complete:
                     query = 'SELECT taskname, sD, eD, task_group FROM tasks WHERE user = ? AND (complete = 0)'
                 else:
                     query = 'SELECT taskname, sD, eD, task_group FROM tasks WHERE user = ? AND (complete = 1)'

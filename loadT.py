@@ -46,7 +46,7 @@ class TaskLoaderThread(QThread):
 
     def add_tasks_to_layout(self, tasks, parent_layout):
         for i in tasks:
-            nTask = Task(i[0], i[1], i[2], complete = False, parent = parent_layout)
+            nTask = Task(i[0], i[1], i[2], is_complete = False, parent = parent_layout)
         
 
     def run_task_thread(self):

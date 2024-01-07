@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QSizePolicy, QMenu, QMainWindow, QApplication, QFrame, QWidget, QVBoxLayout, QLabel, QToolButton, QLineEdit, QHBoxLayout
+from PyQt6.QtWidgets import QScrollArea, QSizePolicy, QMenu, QMainWindow, QApplication, QFrame, QWidget, QVBoxLayout, QLabel, QToolButton, QLineEdit, QHBoxLayout
 from quickbarV2 import QuickBar
 from PyQt6.QtCore import Qt, pyqtSignal
 from addtaskwin import AddTaskWindow
@@ -9,7 +9,7 @@ import sqlite3
 from group_obj import Group
 from splashscreen import SplashScreen
 from loadT import TaskLoaderThread
-
+import sys
 
 class Home(QMainWindow):
     loadingProgress = pyqtSignal(int)
@@ -17,21 +17,26 @@ class Home(QMainWindow):
     def __init__(self, fname='', app=None, parent=None):
         super().__init__(parent)
         self.app = app
-        self.notasklabelshown = bool
+        self.notasklabelshown = False  # Corrected initialization
         self.stretch_added = False
         self.child_wins = []
         self.fname = fname
         self.setWindowTitle("Home")
         self.widgets = []
-        self.unsorted_group = None  # Added instance variable for 'Unsorted' group
+        self.task_layout = QVBoxLayout()
+
         self.setup_ui()
         print('Loading incomplete tasks...')
         self.load_tasks(load_complete=False)
         print('Loading completed tasks...')
         self.load_tasks(load_complete=True)
+        print('setting up signals...')
+        self.setup_signals()
+        print('Signals set')
         self.show()
 
     def setup_ui(self):
+        self.connected_tasks = []
         self.splashscreen = SplashScreen(self, span_ang=10)
         self.loadingProgress.connect(self.splashscreen.updateLoadingProgress)
         self.splashscreen.resize(400, 400)
@@ -41,6 +46,9 @@ class Home(QMainWindow):
         self.app.processEvents()
         self.splashscreen.show()
         self.loadingProgress.emit(40)
+        scroll_area = QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        self.setCentralWidget(scroll_area)
         self.widget = QWidget()
         self.layout = QVBoxLayout()
 
@@ -56,7 +64,6 @@ class Home(QMainWindow):
             border: 2px solid #000000
             }"""
         )
-        self.task_layout = QVBoxLayout()
         self.task_frame.setLayout(self.task_layout)
 
         conn = sqlite3.connect('users.db')
@@ -131,7 +138,6 @@ QMenu::item:selected {
         addgroupaction = QAction('Group', self)
         addgroupaction.triggered.connect(self.addGroup)
         dropdown.addAction(addgroupaction)
-
         addtopicaction = QAction('Topic', self)
         dropdown.addAction(addtopicaction)
 
@@ -176,7 +182,8 @@ QMenu::item:selected {
 
     def add_task_to_gui(self, task_name, start_date, end_date):
         new_task = Task(task_name, start_date, end_date, complete=False)
-        new_task.taskCompleted.connect(self.reload_contents)
+        new_task.taskCompleted.connect(self.reload_tasks)
+        new_task.taskIncompleted.connect(self.reload_tasks)
         if self.notasklabelshown is True:
             self.notasklabel.destroy()
             self.notasklabelshown = False
@@ -194,12 +201,6 @@ QMenu::item:selected {
 
             # Print group names after adding the task
             print("Group Names:", [group.name for group in self.task_frame.children()])
-
-        # Add the task to the 'Unsorted' group if no specific group is found
-        else:
-            self.unsorted_group.add_task(new_task)
-
-        # ... (other code)
 
     def get_group_from_database(self, taskname):
         try:
@@ -234,6 +235,7 @@ QMenu::item:selected {
         # Create a group based on completion status
         group_name = 'Completed' if load_complete else 'Not Completed'
         group_color = '#00FF00' if load_complete else '#FF0000'
+
         self.status_group = Group(name=group_name, color=group_color, parent_layout=self.task_layout)
 
         if self.task_loader.num_of_tasks > 0:
@@ -251,7 +253,7 @@ QMenu::item:selected {
             self.task_loader.finished.connect(self.task_loader.on_thread_finished)
 
             # Connect a new signal to add all tasks to the 'Unsorted' group
-            self.task_loader.tasksLoaded.connect(lambda tasks: self.add_all_tasks_to_unsorted_group(tasks))
+            self.task_loader.tasksLoaded.connect(lambda tasks: self.load_tasks)
 
             # Start the thread
             self.task_loader.run_task_thread()
@@ -264,25 +266,50 @@ QMenu::item:selected {
             )
 
             self.status_group.add_task_to_group(self.notasklabel)
-    def reload_contents(self):
-        # Clear existing tasks and layout
-        for widget in self.widgets:
-            widget.setParent(None)
-            widget.deleteLater()
 
+
+    def setup_signals(self):
+        for widget in self.findChildren(Task):
+            widget.taskCompleted.connect(lambda: self.handle_completion_change(widget, completed=False))
+            widget.taskIncompleted.connect(lambda: self.handle_completion_change(widget, completed=True))
+
+    def handle_completion_change(self, widget: Task, completed: bool):
+        print('Task has been marked as complete. Reloading tasks...')
+        self.clear_tasks()
+        self.clear_groups()
+        if completed:
+            widget.complete_task()
+        else:
+            widget.incomplete_task()
+        self.reload_tasks()
+
+    def reload_tasks(self):
+        print('Clearing tasks...')
+        self.clear_tasks()
+        print('Clearing groups...')
+        self.clear_groups()
+        print('Reloading at home.py')
         # Reload incomplete tasks
         print('Reloading incomplete tasks...')
         self.load_tasks(load_complete=False)
-
         # Reload completed tasks
         print('Reloading completed tasks...')
         self.load_tasks(load_complete=True)
-        
+        self.setup_signals()
+
+    def clear_tasks(self):
+        for widget in self.findChildren(Task):
+            print(f"Task widget: {widget}")
+            widget.setParent(None)
+
+    def clear_groups(self):
+        for widget in self.findChildren(Group):
+            if isinstance(widget, Group):
+                widget.setParent(None)
 
 
 if __name__ == '__main__':
     app = QApplication([])
-    window = QMainWindow()
-    main_win = Home('Elliott', app, window)
+    main_win = Home('Elliott', app)
     main_win.show()
-    app.exec()
+    sys.exit(app.exec())

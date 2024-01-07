@@ -14,8 +14,8 @@ class AddGroupWindow(QMainWindow):
         super().__init__(parent)
         self.user_id = user_id
         self.parent = parent
-        self.init_ui()
         
+        self.init_ui()
     def init_ui(self):
         self.layout = QFormLayout()
 
